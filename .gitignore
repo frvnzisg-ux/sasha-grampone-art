@@ -1,0 +1,42 @@
+# OS / editor
+.DS_Store
+Thumbs.db
+desktop.ini
+*.swp
+*.swo
+*.swn
+.vscode/
+.idea/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+
+# Build / cache
+node_modules/
+.next/
+.cache/
+dist/
+build/
+
+# Local helpers / one-offs
+_inline.py
+_make_assets.py
+_meta.py
+
+# Sensitive
+.env
+.env.local
+.env.*.local
+
+# Source / raw images (the optimizer puts processed versions in /images)
+images/raw/
+
+# Vercel
+.vercel
+
+# Claude Code local config
+.claude/

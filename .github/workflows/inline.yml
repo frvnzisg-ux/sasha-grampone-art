@@ -1,0 +1,51 @@
+name: Sync inlined HTML
+
+# When css/styles.css or js/main.js change, regenerate the inline
+# <style>/<script> blocks inside each HTML file and commit the result
+# back to the branch. The path filter prevents the auto-commit from
+# triggering itself.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "css/styles.css"
+      - "js/main.js"
+      - "tools/inline.py"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+concurrency:
+  group: inline-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Re-inline CSS/JS into HTML
+        run: python tools/inline.py
+
+      - name: Commit changes (if any)
+        run: |
+          if [[ -z "$(git status --porcelain)" ]]; then
+            echo "Already in sync — nothing to do."
+            exit 0
+          fi
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "chore: auto-inline CSS/JS into HTML [skip ci]"
+          git push

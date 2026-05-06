@@ -1843,44 +1843,7 @@ form.sending button[type="submit"] { opacity: 0.6; cursor: wait; }
           <h2>Studio pricing, at a glance.</h2>
           <p>Final pricing depends on size, medium, and complexity. The ranges below cover the most commonly requested commissions; bespoke pieces are quoted individually.</p>
         </div>
-        <div class="pricing reveal">
-          <div class="price-card">
-            <p class="eyebrow">Petite Study</p>
-            <h3>Graphite</h3>
-            <span class="price">from $450</span>
-            <ul>
-              <li>Sizes 8 × 10 — 11 × 14 in</li>
-              <li>Single subject, head study</li>
-              <li>Cotton paper, archival</li>
-              <li>4 – 6 weeks studio time</li>
-            </ul>
-            <a href="#inquire" class="btn btn-secondary">Inquire</a>
-          </div>
-          <div class="price-card">
-            <p class="eyebrow">Most Requested</p>
-            <h3>Oil Portrait</h3>
-            <span class="price">from $950</span>
-            <ul>
-              <li>Sizes 11 × 14 — 16 × 20 in</li>
-              <li>Single subject, oil on linen</li>
-              <li>Soft, painterly background</li>
-              <li>6 – 8 weeks studio time</li>
-            </ul>
-            <a href="#inquire" class="btn btn-secondary">Inquire</a>
-          </div>
-          <div class="price-card">
-            <p class="eyebrow">Heirloom</p>
-            <h3>Large Oil</h3>
-            <span class="price">from $1,800</span>
-            <ul>
-              <li>Sizes 18 × 24 in and up</li>
-              <li>Multi-subject or full figure</li>
-              <li>Custom composition</li>
-              <li>8 – 12 weeks studio time</li>
-            </ul>
-            <a href="#inquire" class="btn btn-secondary">Inquire</a>
-          </div>
-        </div>
+        <div class="pricing reveal" data-source="site.json"></div>
       </div>
     </section>
 
@@ -1892,36 +1855,7 @@ form.sending button[type="submit"] { opacity: 0.6; cursor: wait; }
           <h2>Things people often ask.</h2>
           <p>Anything not answered here? Send a note and Sasha will reply personally.</p>
         </div>
-        <div class="faq reveal">
-          <details>
-            <summary>How long does a commission take?</summary>
-            <div>Most pieces are completed in four to eight weeks from the date your deposit clears. Larger oils, multi-subject pieces, and the busy holiday season may take longer — Sasha will give you a clear timeline before any work begins, and you'll see progress photos along the way.</div>
-          </details>
-          <details>
-            <summary>Will I see the painting before it's finished?</summary>
-            <div>Yes. You'll receive photos at the underpainting stage and again before the final varnish, with room to give feedback at each step. Most clients only ever request small adjustments — but you'll never receive a finished piece you haven't approved.</div>
-          </details>
-          <details>
-            <summary>What kind of reference photos work best?</summary>
-            <div>Clear, well-lit photos taken at the subject's eye level work best — natural daylight is ideal. Phone photos are perfectly fine if they're sharp. Send several and Sasha will help you choose the strongest one (or combine elements from a few).</div>
-          </details>
-          <details>
-            <summary>What if my pet or loved one has passed?</summary>
-            <div>Memorial portraits are some of the most meaningful work to come out of the studio. Send whatever photos you have — even older or imperfect ones. Sasha will work carefully with you to choose a reference that captures their personality, and the conversation is always handled with care.</div>
-          </details>
-          <details>
-            <summary>How does payment work?</summary>
-            <div>A 50% deposit reserves your slot in the studio queue and covers materials. The final 50% is invoiced once the piece is approved and ready to ship. Payment is by card or bank transfer; international clients can pay in USD, GBP, or EUR.</div>
-          </details>
-          <details>
-            <summary>Do you ship internationally?</summary>
-            <div>Yes — paintings ship worldwide, packaged carefully in custom boxes with tracked, insured delivery. Local pickup is also available for clients in the studio's region. Shipping is quoted separately based on size and destination.</div>
-          </details>
-          <details>
-            <summary>What if I'm not happy with the finished piece?</summary>
-            <div>Because you'll have seen and approved the painting at multiple stages, this is rare — but if something genuinely isn't working for you, Sasha will work with you to revise it within reason. Your deposit is non-refundable, but the final balance is only invoiced when you're satisfied.</div>
-          </details>
-        </div>
+        <div class="faq reveal" data-source="site.json"></div>
       </div>
     </section>
 
@@ -2029,7 +1963,7 @@ form.sending button[type="submit"] { opacity: 0.6; cursor: wait; }
           <h4>Connect</h4>
           <ul>
             <li><a href="contact.html">Contact</a></li>
-            <li><a href="mailto:hello@sashagrampone.art">hello@sashagrampone.art</a></li>
+            <li><a href="mailto:hello@sashagrampone.art" data-bind="contact.email">hello@sashagrampone.art</a></li>
             <li><a href="https://instagram.com/" target="_blank" rel="noopener">Instagram</a></li>
             <li><a href="commissions.html#inquire">Request a Commission</a></li>
           </ul>
@@ -2143,6 +2077,99 @@ form.sending button[type="submit"] { opacity: 0.6; cursor: wait; }
             </div>
           </a>
         `).join('');
+      } else if (el.classList.contains('originals-grid')) {
+        // Originals page
+        const fmtPrice = (o) => {
+          if (o.priceDisplay) return esc(o.priceDisplay);
+          const n = parseFloat(o.price);
+          if (!isFinite(n)) return '';
+          return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(n);
+        };
+        const statusLabel = (s) => ({
+          available: 'Available',
+          'coming-soon': 'Coming Soon',
+          sold: 'Sold',
+        })[s] || s;
+        el.innerHTML = items.map((o) => `
+          <article class="original-card">
+            <div class="original-img">
+              <span class="original-badge ${o.status === 'coming-soon' ? 'soon' : (o.status === 'sold' ? 'sold' : '')}">${esc(statusLabel(o.status))}</span>
+              <img src="${esc(o.image)}" alt="${esc(o.imageAlt || o.title)}" loading="lazy" />
+            </div>
+            <div class="original-info">
+              <h3>${esc(o.title)}</h3>
+              <p class="original-meta">${esc([o.medium, o.size, o.year ? '' + o.year : null].filter(Boolean).join(' · '))}</p>
+              <span class="original-price">${fmtPrice(o)}</span>
+              <a href="${o.status === 'sold' ? 'commissions.html#inquire' : 'contact.html'}" class="btn btn-secondary">${esc(o.ctaLabel || 'Inquire to Purchase')}</a>
+            </div>
+          </article>
+        `).join('');
+      } else if (el.classList.contains('pricing')) {
+        // Commissions pricing tiers
+        const tiers = (data.pricing || []).slice();
+        el.innerHTML = tiers.map((t) => `
+          <div class="price-card">
+            <p class="eyebrow">${esc(t.eyebrow || '')}</p>
+            <h3>${esc(t.name || '')}</h3>
+            <span class="price">${esc(t.fromDisplay || (t.from ? 'from $' + t.from : ''))}</span>
+            <ul>${(t.items || []).map((i) => `<li>${esc(i)}</li>`).join('')}</ul>
+            <a href="#inquire" class="btn btn-secondary">Inquire</a>
+          </div>
+        `).join('');
+      } else if (el.classList.contains('faq')) {
+        // FAQ accordion
+        const faq = (data.faq || []).slice();
+        el.innerHTML = faq.map((f) => `
+          <details>
+            <summary>${esc(f.q || '')}</summary>
+            <div>${esc(f.a || '')}</div>
+          </details>
+        `).join('');
+      } else if (el.classList.contains('marquee-track')) {
+        // Marquee — duplicate text twice for seamless scroll
+        const text = (data.marquee || '').trim();
+        if (text) {
+          const span = `<span>${text.split('·').map((s) => `${esc(s.trim())}`).join(' <i class="dot"></i> ')}</span>`;
+          el.innerHTML = span + span;
+        }
+      }
+    });
+
+    // Apply data-bind attributes — element textContent is set from a dotted path in site.json
+    // e.g. <h1 data-bind="hero.headlinePrefix">...</h1>
+    const siteData = cache['site.json'] || {};
+    $$('[data-bind]').forEach((el) => {
+      const path = el.dataset.bind.split('.');
+      let v = siteData;
+      for (const p of path) v = v?.[p];
+      if (v != null && v !== '') {
+        el.textContent = v;
+        // Auto-sync mailto:/tel: hrefs so a contact-email change updates both
+        const href = el.getAttribute && el.getAttribute('href');
+        if (href && href.startsWith('mailto:')) el.setAttribute('href', 'mailto:' + v);
+        else if (href && href.startsWith('tel:')) el.setAttribute('href', 'tel:' + v);
+      }
+    });
+    // data-bind-attr supports binding to attributes: data-bind-attr="href:contact.instagramUrl"
+    $$('[data-bind-attr]').forEach((el) => {
+      const pairs = el.dataset.bindAttr.split(',').map((p) => p.trim());
+      pairs.forEach((pair) => {
+        const [attr, key] = pair.split(':').map((s) => s.trim());
+        if (!attr || !key) return;
+        const path = key.split('.');
+        let v = siteData;
+        for (const p of path) v = v?.[p];
+        if (v != null && v !== '') el.setAttribute(attr, v);
+      });
+    });
+    // data-count attribute (animated counters): keep value in sync
+    $$('[data-bind-count]').forEach((el) => {
+      const path = el.dataset.bindCount.split('.');
+      let v = siteData;
+      for (const p of path) v = v?.[p];
+      if (v != null && isFinite(v)) {
+        el.dataset.count = v;
+        el.textContent = '0';
       }
     });
 

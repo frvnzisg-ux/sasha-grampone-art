@@ -1774,10 +1774,10 @@ form.sending button[type="submit"] { opacity: 0.6; cursor: wait; }
     <section class="hero">
       <div class="container hero-grid">
         <div class="hero-text reveal">
-          <p class="eyebrow sage">Original Art &nbsp;·&nbsp; Custom Commissions</p>
-          <h1>Realistic Portraits of <em>Pets, People,</em> and Moments Worth Remembering.</h1>
+          <p class="eyebrow sage" data-bind="hero.eyebrow">Original Art &nbsp;·&nbsp; Custom Commissions</p>
+          <h1><span data-bind="hero.headlinePrefix">Realistic Portraits of</span> <em data-bind="hero.headlineEm">Pets, People,</em> <span data-bind="hero.headlineSuffix">and Moments Worth Remembering.</span></h1>
           <svg class="squiggle" viewBox="0 0 140 14" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M2 7 Q 17 1, 33 7 T 65 7 T 97 7 T 138 7" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
-          <p class="hero-lead">Original artwork and custom commissions by Sasha Grampone — quietly detailed paintings that hold the small expressions, gestures, and gazes that make a portrait feel alive.</p>
+          <p class="hero-lead" data-bind="hero.lead">Original artwork and custom commissions by Sasha Grampone — quietly detailed paintings that hold the small expressions, gestures, and gazes that make a portrait feel alive.</p>
           <div class="hero-actions">
             <a href="commissions.html#inquire" class="btn btn-primary btn-arrow">Request a Commission</a>
             <a href="portfolio.html" class="btn btn-secondary">View Portfolio</a>
@@ -1826,10 +1826,7 @@ form.sending button[type="submit"] { opacity: 0.6; cursor: wait; }
 
     <!-- MARQUEE STRIP -->
     <aside class="marquee" aria-hidden="true">
-      <div class="marquee-track">
-        <span>Painted by hand <i class="dot"></i> Shipped worldwide <i class="dot"></i> Studio commissions, by appointment <i class="dot"></i> New originals released seasonally <i class="dot"></i> Oil &amp; graphite, archival materials <i class="dot"></i></span>
-        <span>Painted by hand <i class="dot"></i> Shipped worldwide <i class="dot"></i> Studio commissions, by appointment <i class="dot"></i> New originals released seasonally <i class="dot"></i> Oil &amp; graphite, archival materials <i class="dot"></i></span>
-      </div>
+      <div class="marquee-track" data-source="site.json"></div>
     </aside>
 
     <!-- FEATURED -->
@@ -1910,19 +1907,19 @@ form.sending button[type="submit"] { opacity: 0.6; cursor: wait; }
       <div class="container">
         <div class="stats-grid reveal">
           <div class="stat">
-            <span class="stat-num" data-count="200">0</span><span class="stat-suffix">+</span>
+            <span class="stat-num" data-count="200" data-bind-count="stats.portraitsCount">0</span><span class="stat-suffix">+</span>
             <span class="stat-label">Portraits painted</span>
           </div>
           <div class="stat">
-            <span class="stat-num" data-count="9">0</span>
+            <span class="stat-num" data-count="9" data-bind-count="stats.yearsInStudio">0</span>
             <span class="stat-label">Years in studio</span>
           </div>
           <div class="stat">
-            <span class="stat-num" data-count="31">0</span>
+            <span class="stat-num" data-count="31" data-bind-count="stats.countriesShipped">0</span>
             <span class="stat-label">Countries shipped to</span>
           </div>
           <div class="stat">
-            <span class="stat-num" data-count="4">0</span><span class="stat-suffix">–8 wk</span>
+            <span class="stat-num" data-count="4" data-bind-count="stats.turnaroundLow">0</span><span class="stat-suffix" data-bind="_stats_turnaroundSuffix">–8 wk</span>
             <span class="stat-label">Studio turnaround</span>
           </div>
         </div>
@@ -2039,7 +2036,7 @@ form.sending button[type="submit"] { opacity: 0.6; cursor: wait; }
           <h4>Connect</h4>
           <ul>
             <li><a href="contact.html">Contact</a></li>
-            <li><a href="mailto:hello@sashagrampone.art">hello@sashagrampone.art</a></li>
+            <li><a href="mailto:hello@sashagrampone.art" data-bind="contact.email">hello@sashagrampone.art</a></li>
             <li><a href="https://instagram.com/" target="_blank" rel="noopener">Instagram</a></li>
             <li><a href="commissions.html#inquire">Request a Commission</a></li>
           </ul>
@@ -2153,6 +2150,99 @@ form.sending button[type="submit"] { opacity: 0.6; cursor: wait; }
             </div>
           </a>
         `).join('');
+      } else if (el.classList.contains('originals-grid')) {
+        // Originals page
+        const fmtPrice = (o) => {
+          if (o.priceDisplay) return esc(o.priceDisplay);
+          const n = parseFloat(o.price);
+          if (!isFinite(n)) return '';
+          return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(n);
+        };
+        const statusLabel = (s) => ({
+          available: 'Available',
+          'coming-soon': 'Coming Soon',
+          sold: 'Sold',
+        })[s] || s;
+        el.innerHTML = items.map((o) => `
+          <article class="original-card">
+            <div class="original-img">
+              <span class="original-badge ${o.status === 'coming-soon' ? 'soon' : (o.status === 'sold' ? 'sold' : '')}">${esc(statusLabel(o.status))}</span>
+              <img src="${esc(o.image)}" alt="${esc(o.imageAlt || o.title)}" loading="lazy" />
+            </div>
+            <div class="original-info">
+              <h3>${esc(o.title)}</h3>
+              <p class="original-meta">${esc([o.medium, o.size, o.year ? '' + o.year : null].filter(Boolean).join(' · '))}</p>
+              <span class="original-price">${fmtPrice(o)}</span>
+              <a href="${o.status === 'sold' ? 'commissions.html#inquire' : 'contact.html'}" class="btn btn-secondary">${esc(o.ctaLabel || 'Inquire to Purchase')}</a>
+            </div>
+          </article>
+        `).join('');
+      } else if (el.classList.contains('pricing')) {
+        // Commissions pricing tiers
+        const tiers = (data.pricing || []).slice();
+        el.innerHTML = tiers.map((t) => `
+          <div class="price-card">
+            <p class="eyebrow">${esc(t.eyebrow || '')}</p>
+            <h3>${esc(t.name || '')}</h3>
+            <span class="price">${esc(t.fromDisplay || (t.from ? 'from $' + t.from : ''))}</span>
+            <ul>${(t.items || []).map((i) => `<li>${esc(i)}</li>`).join('')}</ul>
+            <a href="#inquire" class="btn btn-secondary">Inquire</a>
+          </div>
+        `).join('');
+      } else if (el.classList.contains('faq')) {
+        // FAQ accordion
+        const faq = (data.faq || []).slice();
+        el.innerHTML = faq.map((f) => `
+          <details>
+            <summary>${esc(f.q || '')}</summary>
+            <div>${esc(f.a || '')}</div>
+          </details>
+        `).join('');
+      } else if (el.classList.contains('marquee-track')) {
+        // Marquee — duplicate text twice for seamless scroll
+        const text = (data.marquee || '').trim();
+        if (text) {
+          const span = `<span>${text.split('·').map((s) => `${esc(s.trim())}`).join(' <i class="dot"></i> ')}</span>`;
+          el.innerHTML = span + span;
+        }
+      }
+    });
+
+    // Apply data-bind attributes — element textContent is set from a dotted path in site.json
+    // e.g. <h1 data-bind="hero.headlinePrefix">...</h1>
+    const siteData = cache['site.json'] || {};
+    $$('[data-bind]').forEach((el) => {
+      const path = el.dataset.bind.split('.');
+      let v = siteData;
+      for (const p of path) v = v?.[p];
+      if (v != null && v !== '') {
+        el.textContent = v;
+        // Auto-sync mailto:/tel: hrefs so a contact-email change updates both
+        const href = el.getAttribute && el.getAttribute('href');
+        if (href && href.startsWith('mailto:')) el.setAttribute('href', 'mailto:' + v);
+        else if (href && href.startsWith('tel:')) el.setAttribute('href', 'tel:' + v);
+      }
+    });
+    // data-bind-attr supports binding to attributes: data-bind-attr="href:contact.instagramUrl"
+    $$('[data-bind-attr]').forEach((el) => {
+      const pairs = el.dataset.bindAttr.split(',').map((p) => p.trim());
+      pairs.forEach((pair) => {
+        const [attr, key] = pair.split(':').map((s) => s.trim());
+        if (!attr || !key) return;
+        const path = key.split('.');
+        let v = siteData;
+        for (const p of path) v = v?.[p];
+        if (v != null && v !== '') el.setAttribute(attr, v);
+      });
+    });
+    // data-count attribute (animated counters): keep value in sync
+    $$('[data-bind-count]').forEach((el) => {
+      const path = el.dataset.bindCount.split('.');
+      let v = siteData;
+      for (const p of path) v = v?.[p];
+      if (v != null && isFinite(v)) {
+        el.dataset.count = v;
+        el.textContent = '0';
       }
     });
 

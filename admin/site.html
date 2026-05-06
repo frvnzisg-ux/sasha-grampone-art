@@ -1,0 +1,387 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Site Settings — Sasha Grampone Admin</title>
+  <meta name="robots" content="noindex, nofollow" />
+  <link rel="icon" type="image/svg+xml" href="/images/favicon.svg" />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400;1,500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/admin/admin.css" />
+  <style>
+    .panel {
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+    .panel h2 {
+      font-style: italic;
+      font-size: 1.4rem;
+      margin: 0 0 0.3rem;
+    }
+    .panel-sub {
+      color: var(--ink-soft);
+      font-size: 0.92rem;
+      margin: 0 0 1.2rem;
+    }
+    .panel hr {
+      border: none;
+      border-top: 1px solid var(--line);
+      margin: 1.2rem 0;
+    }
+    .save-bar {
+      position: sticky;
+      top: 0;
+      background: var(--bg);
+      border-bottom: 1px solid var(--line);
+      padding: 0.8rem 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 10;
+      margin-bottom: 1.5rem;
+    }
+    .save-bar .status { font-size: 0.85rem; color: var(--ink-soft); }
+    .save-bar .status.dirty { color: var(--terracotta-deep); font-weight: 500; }
+    .pricing-tier {
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      padding: 1rem 1.2rem;
+      margin-bottom: 1rem;
+      background: var(--bg);
+    }
+    .pricing-tier-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+    .pricing-tier-head strong { font-family: var(--serif); font-style: italic; font-size: 1.2rem; }
+    .item-list-row {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 0.5rem;
+    }
+    .item-list-row input { flex-grow: 1; }
+    .faq-item {
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      padding: 1rem 1.2rem;
+      margin-bottom: 0.8rem;
+      background: var(--bg);
+    }
+    .faq-item-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.6rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="admin-shell">
+    <aside class="admin-sidebar">
+      <span class="admin-brand">Sasha Grampone</span>
+      <span class="admin-brand-sub">Studio Admin</span>
+      <ul class="admin-nav">
+        <li><a href="/admin/">Dashboard</a></li>
+        <li><a href="/admin/paintings.html">Paintings</a></li>
+        <li><a href="/admin/originals.html">Originals</a></li>
+        <li><a href="/admin/site.html" class="active">Site</a></li>
+        <li><a href="/admin/leads.html">Leads</a></li>
+        <li><a href="/admin/clients.html">Clients</a></li>
+        <li><a href="/admin/projects.html">Projects</a></li>
+      </ul>
+      <div class="admin-back">
+        <a href="/" target="_blank">View public site →</a>
+        <br><br>
+        <a href="#" id="logout-link">Sign out</a>
+      </div>
+    </aside>
+
+    <main class="admin-main">
+      <div class="admin-header">
+        <div>
+          <h1>Site Settings</h1>
+          <p>Hero copy, pricing tiers, FAQ, stats, and contact info — every change rebuilds the live site (~30 sec).</p>
+        </div>
+      </div>
+
+      <div class="save-bar">
+        <span class="status" id="status">Loading…</span>
+        <button class="btn btn-primary" id="save-all" disabled>Save All Changes</button>
+      </div>
+
+      <!-- HERO -->
+      <section class="panel">
+        <h2>Homepage Hero</h2>
+        <p class="panel-sub">The big block at the top of the homepage.</p>
+        <div class="field"><label>Eyebrow (small caps)</label><input type="text" id="hero-eyebrow" /></div>
+        <div class="field-row">
+          <div class="field"><label>Headline (start)</label><input type="text" id="hero-headlinePrefix" /></div>
+          <div class="field"><label>Headline (italic accent)</label><input type="text" id="hero-headlineEm" /></div>
+        </div>
+        <div class="field"><label>Headline (end)</label><input type="text" id="hero-headlineSuffix" /></div>
+        <div class="field"><label>Lead paragraph</label><textarea id="hero-lead" style="min-height: 100px;"></textarea></div>
+      </section>
+
+      <!-- STATS -->
+      <section class="panel">
+        <h2>Stats Numbers</h2>
+        <p class="panel-sub">The four counters above the footer on the homepage.</p>
+        <div class="field-row">
+          <div class="field"><label>Portraits painted</label><input type="number" id="stats-portraitsCount" min="0" /></div>
+          <div class="field"><label>Years in studio</label><input type="number" id="stats-yearsInStudio" min="0" /></div>
+        </div>
+        <div class="field-row">
+          <div class="field"><label>Countries shipped to</label><input type="number" id="stats-countriesShipped" min="0" /></div>
+          <div class="field-row" style="display:contents;">
+            <div class="field"><label>Turnaround low (weeks)</label><input type="number" id="stats-turnaroundLow" min="1" /></div>
+            <div class="field"><label>Turnaround high (weeks)</label><input type="number" id="stats-turnaroundHigh" min="1" /></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- MARQUEE -->
+      <section class="panel">
+        <h2>Marquee Strip</h2>
+        <p class="panel-sub">The orange scrolling text between the intro and featured grid. Use <code>·</code> as a separator.</p>
+        <div class="field"><label>Marquee text</label><textarea id="marquee" style="min-height: 80px;"></textarea></div>
+      </section>
+
+      <!-- CONTACT -->
+      <section class="panel">
+        <h2>Contact Info</h2>
+        <p class="panel-sub">Used in the footer, contact page, and "email us" links throughout the site.</p>
+        <div class="field-row">
+          <div class="field"><label>Public Email</label><input type="email" id="contact-email" /></div>
+          <div class="field"><label>Instagram Handle</label><input type="text" id="contact-instagramHandle" placeholder="@yourhandle" /></div>
+        </div>
+        <div class="field"><label>Instagram URL</label><input type="url" id="contact-instagramUrl" placeholder="https://instagram.com/yourhandle" /></div>
+      </section>
+
+      <!-- PRICING -->
+      <section class="panel">
+        <h2>Commission Pricing Tiers</h2>
+        <p class="panel-sub">The three pricing cards on the Commissions page. Add or remove tiers as needed.</p>
+        <div id="pricing-tiers"></div>
+        <button class="btn btn-secondary" id="add-tier">+ Add Tier</button>
+      </section>
+
+      <!-- FAQ -->
+      <section class="panel">
+        <h2>Commissions FAQ</h2>
+        <p class="panel-sub">The accordion under the pricing on the Commissions page.</p>
+        <div id="faq-items"></div>
+        <button class="btn btn-secondary" id="add-faq">+ Add FAQ</button>
+      </section>
+    </main>
+  </div>
+
+  <script src="/admin/admin.js"></script>
+  <script>
+    document.getElementById("logout-link").addEventListener("click", (e) => { e.preventDefault(); ADMIN.logout(); });
+
+    let data = null;
+    let dirty = false;
+
+    function setDirty(d) {
+      dirty = d;
+      const status = document.getElementById("status");
+      const btn = document.getElementById("save-all");
+      btn.disabled = !d;
+      status.classList.toggle("dirty", d);
+      status.textContent = d ? "Unsaved changes" : "All changes saved.";
+    }
+
+    function bind(input, getter, setter) {
+      input.value = getter() ?? "";
+      const ev = input.tagName === "TEXTAREA" || input.type === "text" || input.type === "email" || input.type === "url" || input.type === "number" ? "input" : "change";
+      input.addEventListener(ev, () => {
+        let v = input.value;
+        if (input.type === "number") {
+          const n = parseFloat(v);
+          v = isFinite(n) ? n : null;
+        }
+        setter(v);
+        setDirty(true);
+      });
+    }
+
+    function renderPricingTier(tier, idx) {
+      const wrap = document.createElement("div");
+      wrap.className = "pricing-tier";
+      wrap.dataset.idx = idx;
+      wrap.innerHTML = `
+        <div class="pricing-tier-head">
+          <strong>${ADMIN.esc(tier.name || "Tier " + (idx + 1))}</strong>
+          <button class="btn btn-danger btn-sm" data-action="del-tier">Remove</button>
+        </div>
+        <div class="field-row">
+          <div class="field"><label>Eyebrow</label><input type="text" data-key="eyebrow" /></div>
+          <div class="field"><label>Tier Name</label><input type="text" data-key="name" /></div>
+        </div>
+        <div class="field-row">
+          <div class="field"><label>Price (number)</label><input type="number" data-key="from" min="0" step="50" /></div>
+          <div class="field"><label>Price Display</label><input type="text" data-key="fromDisplay" placeholder='e.g. "from $450"' /></div>
+        </div>
+        <div class="field"><label>Bullet Points</label><div class="items"></div>
+          <button class="btn btn-secondary btn-sm" data-action="add-item">+ Add Bullet</button>
+        </div>
+      `;
+      // Bind text fields
+      ["eyebrow", "name", "fromDisplay"].forEach((k) => {
+        const i = wrap.querySelector(`[data-key="${k}"]`);
+        bind(i, () => tier[k], (v) => { tier[k] = v; if (k === "name") wrap.querySelector(".pricing-tier-head strong").textContent = v || "Tier " + (idx + 1); });
+      });
+      const fromInput = wrap.querySelector('[data-key="from"]');
+      bind(fromInput, () => tier.from, (v) => { tier.from = v; });
+
+      function renderItems() {
+        const c = wrap.querySelector(".items");
+        c.innerHTML = "";
+        (tier.items || []).forEach((it, ii) => {
+          const r = document.createElement("div");
+          r.className = "item-list-row";
+          r.innerHTML = `<input type="text" placeholder="Bullet text" /><button class="btn btn-danger btn-sm" data-action="del-item">×</button>`;
+          const inp = r.querySelector("input");
+          inp.value = it;
+          inp.addEventListener("input", () => { tier.items[ii] = inp.value; setDirty(true); });
+          r.querySelector('[data-action="del-item"]').addEventListener("click", () => {
+            tier.items.splice(ii, 1);
+            renderItems();
+            setDirty(true);
+          });
+          c.appendChild(r);
+        });
+      }
+      renderItems();
+
+      wrap.querySelector('[data-action="add-item"]').addEventListener("click", () => {
+        if (!tier.items) tier.items = [];
+        tier.items.push("");
+        renderItems();
+        setDirty(true);
+      });
+      wrap.querySelector('[data-action="del-tier"]').addEventListener("click", () => {
+        if (!confirm(`Remove tier "${tier.name}"?`)) return;
+        data.pricing.splice(idx, 1);
+        renderAllPricing();
+        setDirty(true);
+      });
+      return wrap;
+    }
+
+    function renderAllPricing() {
+      const c = document.getElementById("pricing-tiers");
+      c.innerHTML = "";
+      (data.pricing || []).forEach((t, i) => c.appendChild(renderPricingTier(t, i)));
+    }
+
+    function renderFaqItem(item, idx) {
+      const wrap = document.createElement("div");
+      wrap.className = "faq-item";
+      wrap.innerHTML = `
+        <div class="faq-item-head">
+          <strong style="font-family: var(--serif); font-style: italic; font-size: 1.05rem;">FAQ ${idx + 1}</strong>
+          <button class="btn btn-danger btn-sm" data-action="del-faq">Remove</button>
+        </div>
+        <div class="field"><label>Question</label><input type="text" data-key="q" /></div>
+        <div class="field"><label>Answer</label><textarea data-key="a" style="min-height: 90px;"></textarea></div>
+      `;
+      ["q", "a"].forEach((k) => {
+        const i = wrap.querySelector(`[data-key="${k}"]`);
+        bind(i, () => item[k], (v) => { item[k] = v; });
+      });
+      wrap.querySelector('[data-action="del-faq"]').addEventListener("click", () => {
+        if (!confirm("Remove this FAQ?")) return;
+        data.faq.splice(idx, 1);
+        renderAllFaq();
+        setDirty(true);
+      });
+      return wrap;
+    }
+
+    function renderAllFaq() {
+      const c = document.getElementById("faq-items");
+      c.innerHTML = "";
+      (data.faq || []).forEach((f, i) => c.appendChild(renderFaqItem(f, i)));
+    }
+
+    document.getElementById("add-tier").addEventListener("click", () => {
+      if (!data.pricing) data.pricing = [];
+      data.pricing.push({
+        id: "tier-" + ADMIN.id(),
+        eyebrow: "",
+        name: "New Tier",
+        from: 0,
+        fromDisplay: "from $0",
+        items: [],
+      });
+      renderAllPricing();
+      setDirty(true);
+    });
+
+    document.getElementById("add-faq").addEventListener("click", () => {
+      if (!data.faq) data.faq = [];
+      data.faq.push({ id: "faq-" + ADMIN.id(), q: "New question", a: "" });
+      renderAllFaq();
+      setDirty(true);
+    });
+
+    document.getElementById("save-all").addEventListener("click", async () => {
+      const btn = document.getElementById("save-all");
+      btn.disabled = true;
+      try {
+        await ADMIN.save("site.json", data);
+        ADMIN.toast("Saved. Live in ~30 seconds.", "success");
+        setDirty(false);
+      } catch (err) {
+        ADMIN.toast(err.message, "error");
+        btn.disabled = false;
+      }
+    });
+
+    window.addEventListener("beforeunload", (e) => {
+      if (dirty) {
+        e.preventDefault();
+        e.returnValue = "";
+      }
+    });
+
+    (async function () {
+      data = await ADMIN.load("site.json");
+      if (!data || typeof data !== "object") data = {};
+      data.hero = data.hero || {};
+      data.stats = data.stats || {};
+      data.contact = data.contact || {};
+      data.pricing = data.pricing || [];
+      data.faq = data.faq || [];
+
+      // Bind hero
+      ["eyebrow", "headlinePrefix", "headlineEm", "headlineSuffix", "lead"].forEach((k) => {
+        const el = document.getElementById("hero-" + k);
+        bind(el, () => data.hero[k], (v) => { data.hero[k] = v; });
+      });
+      // Bind stats
+      ["portraitsCount", "yearsInStudio", "countriesShipped", "turnaroundLow", "turnaroundHigh"].forEach((k) => {
+        const el = document.getElementById("stats-" + k);
+        bind(el, () => data.stats[k], (v) => { data.stats[k] = v; });
+      });
+      // Marquee
+      bind(document.getElementById("marquee"), () => data.marquee, (v) => { data.marquee = v; });
+      // Contact
+      ["email", "instagramHandle", "instagramUrl"].forEach((k) => {
+        const el = document.getElementById("contact-" + k);
+        bind(el, () => data.contact[k], (v) => { data.contact[k] = v; });
+      });
+
+      renderAllPricing();
+      renderAllFaq();
+      setDirty(false);
+    })();
+  </script>
+</body>
+</html>

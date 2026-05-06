@@ -1,0 +1,172 @@
+{
+  "items": [
+    {
+      "id": "p001",
+      "title": "Marlowe",
+      "subject": "pets",
+      "image": "https://images.unsplash.com/photo-1543466835-00a7907e9de1?auto=format&fit=crop&w=900&q=80",
+      "imageAlt": "Marlowe — golden retriever portrait",
+      "label": "Pet Portrait · Oil",
+      "meta": "Oil on linen · 16 × 20 in · Commission, 2025",
+      "featured": true,
+      "order": 1,
+      "createdAt": "2025-08-01T00:00:00.000Z"
+    },
+    {
+      "id": "p002",
+      "title": "Lena, in Soft Light",
+      "subject": "people",
+      "image": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=900&q=80",
+      "imageAlt": "Portrait of Lena",
+      "label": "Human Portrait · Oil",
+      "meta": "Oil on linen · 16 × 20 in · 2025",
+      "featured": true,
+      "order": 2,
+      "createdAt": "2025-08-02T00:00:00.000Z"
+    },
+    {
+      "id": "p003",
+      "title": "Ollie, Listening",
+      "subject": "pets",
+      "image": "https://images.unsplash.com/photo-1583337130417-3346a1be7dee?auto=format&fit=crop&w=900&q=80",
+      "imageAlt": "Ollie — tabby cat portrait",
+      "label": "Pet Portrait · Graphite",
+      "meta": "Graphite on cotton paper · 11 × 14 in · 2025",
+      "featured": true,
+      "order": 3,
+      "createdAt": "2025-08-03T00:00:00.000Z"
+    },
+    {
+      "id": "p004",
+      "title": "Father, at Rest",
+      "subject": "people",
+      "image": "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=900&q=80",
+      "imageAlt": "Memorial portrait of a father",
+      "label": "Memorial · Oil",
+      "meta": "Oil on linen · 18 × 24 in · Memorial commission, 2024",
+      "featured": true,
+      "order": 4,
+      "createdAt": "2025-08-04T00:00:00.000Z"
+    },
+    {
+      "id": "p005",
+      "title": "Juno",
+      "subject": "pets",
+      "image": "https://images.unsplash.com/photo-1517849845537-4d257902454a?auto=format&fit=crop&w=900&q=80",
+      "imageAlt": "Juno — black cat portrait",
+      "label": "Pet Portrait · Oil",
+      "meta": "Oil on linen · 12 × 16 in · 2024",
+      "featured": true,
+      "order": 5,
+      "createdAt": "2025-08-05T00:00:00.000Z"
+    },
+    {
+      "id": "p006",
+      "title": "Bernie",
+      "subject": "pets",
+      "image": "https://images.unsplash.com/photo-1561037404-61cd46aa615b?auto=format&fit=crop&w=900&q=80",
+      "imageAlt": "Bernie — small dog portrait",
+      "label": "Pet Portrait · Oil",
+      "meta": "Oil on panel · 9 × 12 in · 2024",
+      "featured": false,
+      "order": 6,
+      "createdAt": "2025-08-06T00:00:00.000Z"
+    },
+    {
+      "id": "p007",
+      "title": "Hazel, in the Window",
+      "subject": "pets",
+      "image": "https://images.unsplash.com/photo-1574158622682-e40e69881006?auto=format&fit=crop&w=900&q=80",
+      "imageAlt": "Hazel — cat in window light",
+      "label": "Pet Portrait · Oil",
+      "meta": "Oil on linen · 14 × 18 in · Commission, 2025",
+      "featured": false,
+      "order": 7,
+      "createdAt": "2025-08-07T00:00:00.000Z"
+    },
+    {
+      "id": "p008",
+      "title": "Pip",
+      "subject": "pets",
+      "image": "https://images.unsplash.com/photo-1587300003388-59208cc962cb?auto=format&fit=crop&w=900&q=80",
+      "imageAlt": "Pip — puppy portrait",
+      "label": "Pet Portrait · Graphite",
+      "meta": "Graphite on cotton paper · 8 × 10 in · 2024",
+      "featured": false,
+      "order": 8,
+      "createdAt": "2025-08-08T00:00:00.000Z"
+    },
+    {
+      "id": "p009",
+      "title": "Margaret",
+      "subject": "people",
+      "image": "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&w=900&q=80",
+      "imageAlt": "Graphite portrait of Margaret",
+      "label": "Human Portrait · Graphite",
+      "meta": "Graphite on cotton paper · 11 × 14 in · 2024",
+      "featured": false,
+      "order": 9,
+      "createdAt": "2025-08-09T00:00:00.000Z"
+    },
+    {
+      "id": "p010",
+      "title": "Reuben",
+      "subject": "people",
+      "image": "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=900&q=80",
+      "imageAlt": "Portrait of Reuben",
+      "label": "Human Portrait · Oil",
+      "meta": "Oil on panel · 12 × 16 in · 2024",
+      "featured": false,
+      "order": 10,
+      "createdAt": "2025-08-10T00:00:00.000Z"
+    },
+    {
+      "id": "p011",
+      "title": "Still Hours",
+      "subject": "originals",
+      "image": "https://images.unsplash.com/photo-1513475382585-d06e58bcb0e0?auto=format&fit=crop&w=900&q=80",
+      "imageAlt": "Still Hours — original oil painting",
+      "label": "Original · Oil",
+      "meta": "Oil on linen · 18 × 24 in · Original, 2025",
+      "featured": false,
+      "order": 11,
+      "createdAt": "2025-08-11T00:00:00.000Z"
+    },
+    {
+      "id": "p012",
+      "title": "Window, Late Afternoon",
+      "subject": "originals",
+      "image": "https://images.unsplash.com/photo-1452860606245-08befc0ff44b?auto=format&fit=crop&w=900&q=80",
+      "imageAlt": "Window, Late Afternoon — original",
+      "label": "Original · Oil",
+      "meta": "Oil on linen · 14 × 18 in · Original, 2025",
+      "featured": false,
+      "order": 12,
+      "createdAt": "2025-08-12T00:00:00.000Z"
+    },
+    {
+      "id": "p013",
+      "title": "Underpainting · Lila",
+      "subject": "wip",
+      "image": "https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?auto=format&fit=crop&w=900&q=80",
+      "imageAlt": "Work in progress — early underpainting",
+      "label": "Work in Progress",
+      "meta": "Oil on linen · 16 × 20 in · WIP, May 2026",
+      "featured": false,
+      "order": 13,
+      "createdAt": "2025-08-13T00:00:00.000Z"
+    },
+    {
+      "id": "p014",
+      "title": "Studio Notes",
+      "subject": "wip",
+      "image": "https://images.unsplash.com/photo-1499781350541-7783f6c6a0c8?auto=format&fit=crop&w=900&q=80",
+      "imageAlt": "Studio sketch in progress",
+      "label": "Work in Progress",
+      "meta": "Graphite study · 9 × 12 in · WIP, 2026",
+      "featured": false,
+      "order": 14,
+      "createdAt": "2025-08-14T00:00:00.000Z"
+    }
+  ]
+}

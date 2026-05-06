@@ -130,5 +130,72 @@ const ADMIN = (() => {
       .replace(/'/g, "&#39;");
   }
 
-  return { toast, load, save, id, fmtDate, fmtRelative, openDrawer, closeDrawer, confirmDelete, logout, esc };
+  // ----- Image upload (downscales client-side then POSTs base64 to /api/admin/upload) -----
+  async function uploadImage(file, options = {}) {
+    if (!file) throw new Error("No file selected.");
+    if (!file.type.startsWith("image/")) throw new Error("Only image files.");
+
+    const maxWidth = options.maxWidth || 1600;
+    const quality = options.quality || 0.85;
+
+    const dataUrl = await new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = () => reject(new Error("Failed to read file."));
+      reader.readAsDataURL(file);
+    });
+
+    const img = await new Promise((resolve, reject) => {
+      const i = new Image();
+      i.onload = () => resolve(i);
+      i.onerror = () => reject(new Error("Failed to decode image."));
+      i.src = dataUrl;
+    });
+
+    let { width, height } = img;
+    if (width > maxWidth) {
+      height = Math.round((height * maxWidth) / width);
+      width = maxWidth;
+    }
+
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext("2d");
+    ctx.drawImage(img, 0, 0, width, height);
+
+    const outType = file.type === "image/png" ? "image/png" : "image/jpeg";
+    const blob = await new Promise((resolve) =>
+      canvas.toBlob(resolve, outType, quality)
+    );
+    if (!blob) throw new Error("Failed to encode downscaled image.");
+
+    const base64 = await new Promise((resolve, reject) => {
+      const r = new FileReader();
+      r.onload = () => {
+        const s = r.result;
+        const idx = s.indexOf(",");
+        resolve(idx >= 0 ? s.slice(idx + 1) : s);
+      };
+      r.onerror = () => reject(new Error("Failed to encode base64."));
+      r.readAsDataURL(blob);
+    });
+
+    const res = await fetch("/api/admin/upload", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        filename: file.name,
+        contentType: outType,
+        content: base64,
+      }),
+    });
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new Error(`Upload failed (${res.status}): ${text}`);
+    }
+    return res.json();
+  }
+
+  return { toast, load, save, id, fmtDate, fmtRelative, openDrawer, closeDrawer, confirmDelete, logout, esc, uploadImage };
 })();

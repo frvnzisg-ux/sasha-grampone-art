@@ -12,7 +12,12 @@
 //   GITHUB_REPO         — "owner/repo"  e.g. "frvnzisg-ux/sasha-grampone-art"
 //   GITHUB_BRANCH       — branch to commit to (default: "main")
 
-const ALLOWED_FILES = new Set(["leads.json", "clients.json", "projects.json"]);
+const ALLOWED_FILES = new Set([
+  "leads.json",
+  "clients.json",
+  "projects.json",
+  "paintings.json",
+]);
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {

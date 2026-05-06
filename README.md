@@ -114,11 +114,11 @@ Every push to `main` triggers a production deploy. Branch pushes get unique prev
 
 ### Custom domain
 
-Once you own a domain (e.g. `sashagramponeart.com`):
+Once you own a domain (e.g. `sashagrampone.art`):
 
 1. Vercel → Project → **Settings** → **Domains** → add your domain
 2. Update the DNS records as Vercel instructs (usually a single `CNAME` or `A` record)
-3. Find-and-replace `sashagramponeart.com` across the HTML files if you used a different domain — this updates the OG/Twitter share URLs
+3. Find-and-replace `sashagrampone.art` across the HTML files if you used a different domain — this updates the OG/Twitter share URLs
 
 ## Tech notes
 

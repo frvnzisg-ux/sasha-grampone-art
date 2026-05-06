@@ -1,0 +1,100 @@
+{
+  "hero": {
+    "eyebrow": "Original Art · Custom Commissions",
+    "headlinePrefix": "Realistic Portraits of",
+    "headlineEm": "Pets, People,",
+    "headlineSuffix": "and Moments Worth Remembering.",
+    "lead": "Original artwork and custom commissions by Sasha Grampone — quietly detailed paintings that hold the small expressions, gestures, and gazes that make a portrait feel alive."
+  },
+  "stats": {
+    "portraitsCount": 200,
+    "yearsInStudio": 9,
+    "countriesShipped": 31,
+    "turnaroundLow": 4,
+    "turnaroundHigh": 8
+  },
+  "marquee": "Painted by hand · Shipped worldwide · Studio commissions, by appointment · New originals released seasonally · Oil & graphite, archival materials",
+  "contact": {
+    "email": "hello@sashagrampone.art",
+    "instagramHandle": "@sashagrampone.art",
+    "instagramUrl": "https://instagram.com/"
+  },
+  "pricing": [
+    {
+      "id": "tier-graphite",
+      "eyebrow": "Petite Study",
+      "name": "Graphite",
+      "from": 450,
+      "fromDisplay": "from $450",
+      "items": [
+        "Sizes 8 × 10 — 11 × 14 in",
+        "Single subject, head study",
+        "Cotton paper, archival",
+        "4 – 6 weeks studio time"
+      ]
+    },
+    {
+      "id": "tier-oil",
+      "eyebrow": "Most Requested",
+      "name": "Oil Portrait",
+      "from": 950,
+      "fromDisplay": "from $950",
+      "items": [
+        "Sizes 11 × 14 — 16 × 20 in",
+        "Single subject, oil on linen",
+        "Soft, painterly background",
+        "6 – 8 weeks studio time"
+      ]
+    },
+    {
+      "id": "tier-large",
+      "eyebrow": "Heirloom",
+      "name": "Large Oil",
+      "from": 1800,
+      "fromDisplay": "from $1,800",
+      "items": [
+        "Sizes 18 × 24 in and up",
+        "Multi-subject or full figure",
+        "Custom composition",
+        "8 – 12 weeks studio time"
+      ]
+    }
+  ],
+  "faq": [
+    {
+      "id": "faq-1",
+      "q": "How long does a commission take?",
+      "a": "Most pieces are completed in four to eight weeks from the date your deposit clears. Larger oils, multi-subject pieces, and the busy holiday season may take longer — Sasha will give you a clear timeline before any work begins, and you'll see progress photos along the way."
+    },
+    {
+      "id": "faq-2",
+      "q": "Will I see the painting before it's finished?",
+      "a": "Yes. You'll receive photos at the underpainting stage and again before the final varnish, with room to give feedback at each step. Most clients only ever request small adjustments — but you'll never receive a finished piece you haven't approved."
+    },
+    {
+      "id": "faq-3",
+      "q": "What kind of reference photos work best?",
+      "a": "Clear, well-lit photos taken at the subject's eye level work best — natural daylight is ideal. Phone photos are perfectly fine if they're sharp. Send several and Sasha will help you choose the strongest one (or combine elements from a few)."
+    },
+    {
+      "id": "faq-4",
+      "q": "What if my pet or loved one has passed?",
+      "a": "Memorial portraits are some of the most meaningful work to come out of the studio. Send whatever photos you have — even older or imperfect ones. Sasha will work carefully with you to choose a reference that captures their personality, and the conversation is always handled with care."
+    },
+    {
+      "id": "faq-5",
+      "q": "How does payment work?",
+      "a": "A 50% deposit reserves your slot in the studio queue and covers materials. The final 50% is invoiced once the piece is approved and ready to ship. Payment is by card or bank transfer; international clients can pay in USD, GBP, or EUR."
+    },
+    {
+      "id": "faq-6",
+      "q": "Do you ship internationally?",
+      "a": "Yes — paintings ship worldwide, packaged carefully in custom boxes with tracked, insured delivery. Local pickup is also available for clients in the studio's region. Shipping is quoted separately based on size and destination."
+    },
+    {
+      "id": "faq-7",
+      "q": "What if I'm not happy with the finished piece?",
+      "a": "Because you'll have seen and approved the painting at multiple stages, this is rare — but if something genuinely isn't working for you, Sasha will work with you to revise it within reason. Your deposit is non-refundable, but the final balance is only invoiced when you're satisfied."
+    }
+  ]
+}

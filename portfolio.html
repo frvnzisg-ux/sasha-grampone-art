@@ -1853,7 +1853,7 @@ form.sending button[type="submit"] { opacity: 0.6; cursor: wait; }
           <h4>Connect</h4>
           <ul>
             <li><a href="contact.html">Contact</a></li>
-            <li><a href="mailto:hello@sashagrampone.art">hello@sashagrampone.art</a></li>
+            <li><a href="mailto:hello@sashagrampone.art" data-bind="contact.email">hello@sashagrampone.art</a></li>
             <li><a href="https://instagram.com/" target="_blank" rel="noopener">Instagram</a></li>
             <li><a href="commissions.html#inquire">Request a Commission</a></li>
           </ul>
@@ -1967,6 +1967,99 @@ form.sending button[type="submit"] { opacity: 0.6; cursor: wait; }
             </div>
           </a>
         `).join('');
+      } else if (el.classList.contains('originals-grid')) {
+        // Originals page
+        const fmtPrice = (o) => {
+          if (o.priceDisplay) return esc(o.priceDisplay);
+          const n = parseFloat(o.price);
+          if (!isFinite(n)) return '';
+          return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(n);
+        };
+        const statusLabel = (s) => ({
+          available: 'Available',
+          'coming-soon': 'Coming Soon',
+          sold: 'Sold',
+        })[s] || s;
+        el.innerHTML = items.map((o) => `
+          <article class="original-card">
+            <div class="original-img">
+              <span class="original-badge ${o.status === 'coming-soon' ? 'soon' : (o.status === 'sold' ? 'sold' : '')}">${esc(statusLabel(o.status))}</span>
+              <img src="${esc(o.image)}" alt="${esc(o.imageAlt || o.title)}" loading="lazy" />
+            </div>
+            <div class="original-info">
+              <h3>${esc(o.title)}</h3>
+              <p class="original-meta">${esc([o.medium, o.size, o.year ? '' + o.year : null].filter(Boolean).join(' · '))}</p>
+              <span class="original-price">${fmtPrice(o)}</span>
+              <a href="${o.status === 'sold' ? 'commissions.html#inquire' : 'contact.html'}" class="btn btn-secondary">${esc(o.ctaLabel || 'Inquire to Purchase')}</a>
+            </div>
+          </article>
+        `).join('');
+      } else if (el.classList.contains('pricing')) {
+        // Commissions pricing tiers
+        const tiers = (data.pricing || []).slice();
+        el.innerHTML = tiers.map((t) => `
+          <div class="price-card">
+            <p class="eyebrow">${esc(t.eyebrow || '')}</p>
+            <h3>${esc(t.name || '')}</h3>
+            <span class="price">${esc(t.fromDisplay || (t.from ? 'from $' + t.from : ''))}</span>
+            <ul>${(t.items || []).map((i) => `<li>${esc(i)}</li>`).join('')}</ul>
+            <a href="#inquire" class="btn btn-secondary">Inquire</a>
+          </div>
+        `).join('');
+      } else if (el.classList.contains('faq')) {
+        // FAQ accordion
+        const faq = (data.faq || []).slice();
+        el.innerHTML = faq.map((f) => `
+          <details>
+            <summary>${esc(f.q || '')}</summary>
+            <div>${esc(f.a || '')}</div>
+          </details>
+        `).join('');
+      } else if (el.classList.contains('marquee-track')) {
+        // Marquee — duplicate text twice for seamless scroll
+        const text = (data.marquee || '').trim();
+        if (text) {
+          const span = `<span>${text.split('·').map((s) => `${esc(s.trim())}`).join(' <i class="dot"></i> ')}</span>`;
+          el.innerHTML = span + span;
+        }
+      }
+    });
+
+    // Apply data-bind attributes — element textContent is set from a dotted path in site.json
+    // e.g. <h1 data-bind="hero.headlinePrefix">...</h1>
+    const siteData = cache['site.json'] || {};
+    $$('[data-bind]').forEach((el) => {
+      const path = el.dataset.bind.split('.');
+      let v = siteData;
+      for (const p of path) v = v?.[p];
+      if (v != null && v !== '') {
+        el.textContent = v;
+        // Auto-sync mailto:/tel: hrefs so a contact-email change updates both
+        const href = el.getAttribute && el.getAttribute('href');
+        if (href && href.startsWith('mailto:')) el.setAttribute('href', 'mailto:' + v);
+        else if (href && href.startsWith('tel:')) el.setAttribute('href', 'tel:' + v);
+      }
+    });
+    // data-bind-attr supports binding to attributes: data-bind-attr="href:contact.instagramUrl"
+    $$('[data-bind-attr]').forEach((el) => {
+      const pairs = el.dataset.bindAttr.split(',').map((p) => p.trim());
+      pairs.forEach((pair) => {
+        const [attr, key] = pair.split(':').map((s) => s.trim());
+        if (!attr || !key) return;
+        const path = key.split('.');
+        let v = siteData;
+        for (const p of path) v = v?.[p];
+        if (v != null && v !== '') el.setAttribute(attr, v);
+      });
+    });
+    // data-count attribute (animated counters): keep value in sync
+    $$('[data-bind-count]').forEach((el) => {
+      const path = el.dataset.bindCount.split('.');
+      let v = siteData;
+      for (const p of path) v = v?.[p];
+      if (v != null && isFinite(v)) {
+        el.dataset.count = v;
+        el.textContent = '0';
       }
     });
 

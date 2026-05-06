@@ -1780,87 +1780,7 @@ form.sending button[type="submit"] { opacity: 0.6; cursor: wait; }
 
     <section>
       <div class="container">
-        <div class="originals-grid reveal">
-
-          <article class="original-card">
-            <div class="original-img">
-              <span class="original-badge">Available</span>
-              <img src="https://images.unsplash.com/photo-1513475382585-d06e58bcb0e0?auto=format&fit=crop&w=900&q=80" alt="Still Hours — original oil painting" />
-            </div>
-            <div class="original-info">
-              <h3>Still Hours</h3>
-              <p class="original-meta">Oil on linen &nbsp;·&nbsp; 18 × 24 in &nbsp;·&nbsp; 2025</p>
-              <span class="original-price">$1,650</span>
-              <a href="contact.html" class="btn btn-secondary">Inquire to Purchase</a>
-            </div>
-          </article>
-
-          <article class="original-card">
-            <div class="original-img">
-              <span class="original-badge">Available</span>
-              <img src="https://images.unsplash.com/photo-1452860606245-08befc0ff44b?auto=format&fit=crop&w=900&q=80" alt="Window, Late Afternoon — original" />
-            </div>
-            <div class="original-info">
-              <h3>Window, Late Afternoon</h3>
-              <p class="original-meta">Oil on linen &nbsp;·&nbsp; 14 × 18 in &nbsp;·&nbsp; 2025</p>
-              <span class="original-price">$1,250</span>
-              <a href="contact.html" class="btn btn-secondary">Inquire to Purchase</a>
-            </div>
-          </article>
-
-          <article class="original-card">
-            <div class="original-img">
-              <span class="original-badge">Available</span>
-              <img src="https://images.unsplash.com/photo-1574158622682-e40e69881006?auto=format&fit=crop&w=900&q=80" alt="A Quiet Watch — cat in light" />
-            </div>
-            <div class="original-info">
-              <h3>A Quiet Watch</h3>
-              <p class="original-meta">Oil on panel &nbsp;·&nbsp; 11 × 14 in &nbsp;·&nbsp; 2024</p>
-              <span class="original-price">$780</span>
-              <a href="contact.html" class="btn btn-secondary">Inquire to Purchase</a>
-            </div>
-          </article>
-
-          <article class="original-card">
-            <div class="original-img">
-              <span class="original-badge soon">Coming Soon</span>
-              <img src="https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?auto=format&fit=crop&w=900&q=80" alt="Studio Series — work in progress" />
-            </div>
-            <div class="original-info">
-              <h3>Studio Series · No. 04</h3>
-              <p class="original-meta">Oil on linen &nbsp;·&nbsp; 16 × 20 in &nbsp;·&nbsp; In progress</p>
-              <span class="original-price">$1,150 (est.)</span>
-              <a href="contact.html" class="btn btn-secondary">Join the Waitlist</a>
-            </div>
-          </article>
-
-          <article class="original-card">
-            <div class="original-img">
-              <span class="original-badge soon">Coming Soon</span>
-              <img src="https://images.unsplash.com/photo-1499781350541-7783f6c6a0c8?auto=format&fit=crop&w=900&q=80" alt="New original — coming soon" />
-            </div>
-            <div class="original-info">
-              <h3>Untitled Study</h3>
-              <p class="original-meta">Graphite on cotton paper &nbsp;·&nbsp; 11 × 14 in &nbsp;·&nbsp; In progress</p>
-              <span class="original-price">$520 (est.)</span>
-              <a href="contact.html" class="btn btn-secondary">Join the Waitlist</a>
-            </div>
-          </article>
-
-          <article class="original-card">
-            <div class="original-img">
-              <span class="original-badge sold">Sold</span>
-              <img src="https://images.unsplash.com/photo-1583337130417-3346a1be7dee?auto=format&fit=crop&w=900&q=80" alt="Sold original" />
-            </div>
-            <div class="original-info">
-              <h3>Ollie, Listening</h3>
-              <p class="original-meta">Graphite &nbsp;·&nbsp; 11 × 14 in &nbsp;·&nbsp; 2025</p>
-              <span class="original-price">Private Collection</span>
-              <a href="commissions.html#inquire" class="btn btn-secondary">Commission Similar</a>
-            </div>
-          </article>
-
-        </div>
+        <div class="originals-grid reveal" data-source="originals.json"></div>
       </div>
     </section>
 
@@ -1920,7 +1840,7 @@ form.sending button[type="submit"] { opacity: 0.6; cursor: wait; }
           <h4>Connect</h4>
           <ul>
             <li><a href="contact.html">Contact</a></li>
-            <li><a href="mailto:hello@sashagrampone.art">hello@sashagrampone.art</a></li>
+            <li><a href="mailto:hello@sashagrampone.art" data-bind="contact.email">hello@sashagrampone.art</a></li>
             <li><a href="https://instagram.com/" target="_blank" rel="noopener">Instagram</a></li>
             <li><a href="commissions.html#inquire">Request a Commission</a></li>
           </ul>
@@ -2034,6 +1954,99 @@ form.sending button[type="submit"] { opacity: 0.6; cursor: wait; }
             </div>
           </a>
         `).join('');
+      } else if (el.classList.contains('originals-grid')) {
+        // Originals page
+        const fmtPrice = (o) => {
+          if (o.priceDisplay) return esc(o.priceDisplay);
+          const n = parseFloat(o.price);
+          if (!isFinite(n)) return '';
+          return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(n);
+        };
+        const statusLabel = (s) => ({
+          available: 'Available',
+          'coming-soon': 'Coming Soon',
+          sold: 'Sold',
+        })[s] || s;
+        el.innerHTML = items.map((o) => `
+          <article class="original-card">
+            <div class="original-img">
+              <span class="original-badge ${o.status === 'coming-soon' ? 'soon' : (o.status === 'sold' ? 'sold' : '')}">${esc(statusLabel(o.status))}</span>
+              <img src="${esc(o.image)}" alt="${esc(o.imageAlt || o.title)}" loading="lazy" />
+            </div>
+            <div class="original-info">
+              <h3>${esc(o.title)}</h3>
+              <p class="original-meta">${esc([o.medium, o.size, o.year ? '' + o.year : null].filter(Boolean).join(' · '))}</p>
+              <span class="original-price">${fmtPrice(o)}</span>
+              <a href="${o.status === 'sold' ? 'commissions.html#inquire' : 'contact.html'}" class="btn btn-secondary">${esc(o.ctaLabel || 'Inquire to Purchase')}</a>
+            </div>
+          </article>
+        `).join('');
+      } else if (el.classList.contains('pricing')) {
+        // Commissions pricing tiers
+        const tiers = (data.pricing || []).slice();
+        el.innerHTML = tiers.map((t) => `
+          <div class="price-card">
+            <p class="eyebrow">${esc(t.eyebrow || '')}</p>
+            <h3>${esc(t.name || '')}</h3>
+            <span class="price">${esc(t.fromDisplay || (t.from ? 'from $' + t.from : ''))}</span>
+            <ul>${(t.items || []).map((i) => `<li>${esc(i)}</li>`).join('')}</ul>
+            <a href="#inquire" class="btn btn-secondary">Inquire</a>
+          </div>
+        `).join('');
+      } else if (el.classList.contains('faq')) {
+        // FAQ accordion
+        const faq = (data.faq || []).slice();
+        el.innerHTML = faq.map((f) => `
+          <details>
+            <summary>${esc(f.q || '')}</summary>
+            <div>${esc(f.a || '')}</div>
+          </details>
+        `).join('');
+      } else if (el.classList.contains('marquee-track')) {
+        // Marquee — duplicate text twice for seamless scroll
+        const text = (data.marquee || '').trim();
+        if (text) {
+          const span = `<span>${text.split('·').map((s) => `${esc(s.trim())}`).join(' <i class="dot"></i> ')}</span>`;
+          el.innerHTML = span + span;
+        }
+      }
+    });
+
+    // Apply data-bind attributes — element textContent is set from a dotted path in site.json
+    // e.g. <h1 data-bind="hero.headlinePrefix">...</h1>
+    const siteData = cache['site.json'] || {};
+    $$('[data-bind]').forEach((el) => {
+      const path = el.dataset.bind.split('.');
+      let v = siteData;
+      for (const p of path) v = v?.[p];
+      if (v != null && v !== '') {
+        el.textContent = v;
+        // Auto-sync mailto:/tel: hrefs so a contact-email change updates both
+        const href = el.getAttribute && el.getAttribute('href');
+        if (href && href.startsWith('mailto:')) el.setAttribute('href', 'mailto:' + v);
+        else if (href && href.startsWith('tel:')) el.setAttribute('href', 'tel:' + v);
+      }
+    });
+    // data-bind-attr supports binding to attributes: data-bind-attr="href:contact.instagramUrl"
+    $$('[data-bind-attr]').forEach((el) => {
+      const pairs = el.dataset.bindAttr.split(',').map((p) => p.trim());
+      pairs.forEach((pair) => {
+        const [attr, key] = pair.split(':').map((s) => s.trim());
+        if (!attr || !key) return;
+        const path = key.split('.');
+        let v = siteData;
+        for (const p of path) v = v?.[p];
+        if (v != null && v !== '') el.setAttribute(attr, v);
+      });
+    });
+    // data-count attribute (animated counters): keep value in sync
+    $$('[data-bind-count]').forEach((el) => {
+      const path = el.dataset.bindCount.split('.');
+      let v = siteData;
+      for (const p of path) v = v?.[p];
+      if (v != null && isFinite(v)) {
+        el.dataset.count = v;
+        el.textContent = '0';
       }
     });
 

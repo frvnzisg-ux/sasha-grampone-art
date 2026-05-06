@@ -17,6 +17,8 @@ const ALLOWED_FILES = new Set([
   "clients.json",
   "projects.json",
   "paintings.json",
+  "originals.json",
+  "site.json",
 ]);
 
 export default async function handler(req, res) {

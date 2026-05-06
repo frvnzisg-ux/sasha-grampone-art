@@ -1,7 +1,14 @@
 /* Sasha Grampone Art — interactions */
 
 (function () {
-  // Mobile nav toggle
+  // ------ Helpers ------
+  const $$ = (s, root = document) => root.querySelectorAll(s);
+  const getGalleryItems = () => $$('.gallery .gallery-item');
+  const esc = (s) => String(s ?? "")
+    .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+
+  // ------ Mobile nav toggle ------
   const toggle = document.querySelector('.nav-toggle');
   const links = document.querySelector('.nav-links');
   if (toggle && links) {
@@ -12,32 +19,95 @@
     });
   }
 
-  // Reveal-on-scroll
-  const reveal = document.querySelectorAll('.reveal');
-  if ('IntersectionObserver' in window && reveal.length) {
-    const io = new IntersectionObserver((entries) => {
-      entries.forEach((e) => {
-        if (e.isIntersecting) {
-          e.target.classList.add('visible');
-          io.unobserve(e.target);
+  // ------ Reveal-on-scroll (re-callable for dynamically added .reveal) ------
+  let revealObserver = null;
+  function observeReveals() {
+    const reveal = $$('.reveal:not(.visible)');
+    if ('IntersectionObserver' in window) {
+      if (!revealObserver) {
+        revealObserver = new IntersectionObserver((entries) => {
+          entries.forEach((e) => {
+            if (e.isIntersecting) {
+              e.target.classList.add('visible');
+              revealObserver.unobserve(e.target);
+            }
+          });
+        }, { threshold: 0.12, rootMargin: '0px 0px -60px 0px' });
+      }
+      reveal.forEach((el) => revealObserver.observe(el));
+    } else {
+      reveal.forEach((el) => el.classList.add('visible'));
+    }
+  }
+  observeReveals();
+
+  // ------ Dynamic gallery / featured rendering from /data/paintings.json ------
+  // Containers opt in via:  <div class="gallery" data-source="paintings.json"></div>
+  //                         <div class="featured-grid" data-source="paintings.json:featured"></div>
+  async function renderDynamicSources() {
+    const sources = $$('[data-source]');
+    if (!sources.length) return;
+    const fileNames = new Set();
+    sources.forEach((el) => {
+      const [file] = String(el.dataset.source).split(':');
+      if (file) fileNames.add(file);
+    });
+
+    const cache = {};
+    await Promise.all(
+      [...fileNames].map(async (f) => {
+        try {
+          const res = await fetch(`/data/${f}?_=${Date.now()}`, { cache: 'no-store' });
+          cache[f] = await res.json();
+        } catch (e) {
+          console.warn('Failed to load', f, e);
+          cache[f] = { items: [] };
         }
-      });
-    }, { threshold: 0.12, rootMargin: '0px 0px -60px 0px' });
-    reveal.forEach((el) => io.observe(el));
-  } else {
-    reveal.forEach((el) => el.classList.add('visible'));
+      })
+    );
+
+    sources.forEach((el) => {
+      const [file, scope] = String(el.dataset.source).split(':');
+      const data = cache[file] || { items: [] };
+      const items = (data.items || []).slice().sort((a, b) => (a.order || 999) - (b.order || 999));
+
+      if (el.classList.contains('gallery')) {
+        // Portfolio gallery — render full set; filter buttons handle visibility
+        el.innerHTML = items.map((p) => `
+          <div class="gallery-item" data-category="${esc(p.subject)}" data-title="${esc(p.title)}" data-meta="${esc(p.meta || p.label || '')}">
+            <img src="${esc(p.image)}" alt="${esc(p.imageAlt || p.title)}" loading="lazy" />
+            <div class="gallery-item-info"><h4>${esc(p.title)}</h4><span>${esc(p.label || '')}</span></div>
+          </div>
+        `).join('');
+      } else if (el.classList.contains('featured-grid')) {
+        // Homepage featured grid — only featured items, capped to 5
+        const feat = items.filter((p) => p.featured).slice(0, 5);
+        el.innerHTML = feat.map((p, idx) => `
+          <a class="feat-card${idx === 0 ? ' feat-tall' : ''}" href="portfolio.html">
+            <img src="${esc(p.image)}" alt="${esc(p.imageAlt || p.title)}" loading="lazy" />
+            <div class="feat-card-info">
+              <h4>${esc(p.title)}</h4>
+              <span>${esc(p.label || '')}</span>
+            </div>
+          </a>
+        `).join('');
+      }
+    });
+
+    // Re-observe new .reveal children, then notify other modules
+    observeReveals();
+    document.dispatchEvent(new CustomEvent('gallery:loaded'));
   }
 
-  // Gallery filters
-  const filterBtns = document.querySelectorAll('.gallery-filters button');
-  const galleryItems = document.querySelectorAll('.gallery .gallery-item');
-  if (filterBtns.length && galleryItems.length) {
+  // ------ Gallery filters (re-queries items each click) ------
+  const filterBtns = $$('.gallery-filters button');
+  if (filterBtns.length) {
     filterBtns.forEach((btn) => {
       btn.addEventListener('click', () => {
         filterBtns.forEach((b) => b.classList.remove('active'));
         btn.classList.add('active');
         const target = btn.dataset.filter;
-        galleryItems.forEach((item) => {
+        getGalleryItems().forEach((item) => {
           const cats = (item.dataset.category || '').split(' ');
           const show = target === 'all' || cats.includes(target);
           item.style.display = show ? '' : 'none';
@@ -46,7 +116,7 @@
     });
   }
 
-  // Lightbox
+  // ------ Lightbox (uses event delegation; works for dynamic items) ------
   const lightbox = document.querySelector('.lightbox');
   if (lightbox) {
     const lbImg = lightbox.querySelector('img');
@@ -60,7 +130,7 @@
     let currentIndex = 0;
 
     const refreshVisible = () => {
-      visibleItems = Array.from(galleryItems).filter((i) => i.style.display !== 'none');
+      visibleItems = Array.from(getGalleryItems()).filter((i) => i.style.display !== 'none');
     };
 
     const showAt = (index) => {
@@ -82,12 +152,12 @@
       document.body.style.overflow = '';
     };
 
-    galleryItems.forEach((item, idx) => {
-      item.addEventListener('click', () => {
-        refreshVisible();
-        const i = visibleItems.indexOf(item);
-        showAt(i >= 0 ? i : 0);
-      });
+    document.body.addEventListener('click', (e) => {
+      const item = e.target.closest('.gallery .gallery-item');
+      if (!item) return;
+      refreshVisible();
+      const i = visibleItems.indexOf(item);
+      showAt(i >= 0 ? i : 0);
     });
 
     if (closeBtn) closeBtn.addEventListener('click', close);
@@ -102,8 +172,8 @@
     });
   }
 
-  // File-input label updates
-  document.querySelectorAll('.field-file input[type="file"]').forEach((input) => {
+  // ------ File-input label updates ------
+  $$('.field-file input[type="file"]').forEach((input) => {
     input.addEventListener('change', () => {
       const label = input.closest('.field-file').querySelector('span');
       if (!label) return;
@@ -116,8 +186,8 @@
     });
   });
 
-  // Form submit — Formspree (with placeholder fallback) or demo
-  document.querySelectorAll('form[data-demo], form[data-formspree]').forEach((form) => {
+  // ------ Form submit — Formspree (with placeholder fallback) or demo ------
+  $$('form[data-demo], form[data-formspree]').forEach((form) => {
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
       const note = form.querySelector('.form-note');
@@ -153,10 +223,10 @@
           setNote("Thank you — your message has been received. Sasha will reply within 2 business days.", 'success');
           form.reset();
         } else {
-          setNote("Something went wrong. Please email hello@sashagramponeart.com directly.", 'error');
+          setNote("Something went wrong. Please email hello@sashagrampone.art directly.", 'error');
         }
       } catch (err) {
-        setNote("Network error. Please email hello@sashagramponeart.com directly.", 'error');
+        setNote("Network error. Please email hello@sashagrampone.art directly.", 'error');
       } finally {
         form.classList.remove('sending');
         if (submitBtn) submitBtn.disabled = false;
@@ -164,8 +234,8 @@
     });
   });
 
-  // Click-to-play video embeds
-  document.querySelectorAll('.video-embed').forEach((el) => {
+  // ------ Click-to-play video embeds ------
+  $$('.video-embed').forEach((el) => {
     el.addEventListener('click', () => {
       if (el.classList.contains('playing')) return;
       const src = el.dataset.embed;
@@ -180,12 +250,12 @@
     });
   });
 
-  // Footer year
+  // ------ Footer year ------
   const yearEl = document.querySelector('[data-year]');
   if (yearEl) yearEl.textContent = new Date().getFullYear();
 
-  // Before/After reveal slider
-  document.querySelectorAll('.ba-slider').forEach((slider) => {
+  // ------ Before/After reveal slider ------
+  $$('.ba-slider').forEach((slider) => {
     const before = slider.querySelector('.ba-slider-before');
     const handle = slider.querySelector('.ba-slider-handle');
     if (!before || !handle) return;
@@ -226,8 +296,8 @@
     update();
   });
 
-  // Animated stat counters
-  const counters = document.querySelectorAll('.stat-num[data-count]');
+  // ------ Animated stat counters ------
+  const counters = $$('.stat-num[data-count]');
   if ('IntersectionObserver' in window && counters.length) {
     const cio = new IntersectionObserver((entries) => {
       entries.forEach((e) => {
@@ -250,27 +320,30 @@
     counters.forEach((c) => cio.observe(c));
   }
 
-  // Custom "View" cursor over gallery items
+  // ------ Custom "View" cursor over gallery items (event delegation) ------
   const badge = document.querySelector('.cursor-badge');
-  const galleryEls = document.querySelectorAll('.gallery .gallery-item');
-  if (badge && galleryEls.length && window.matchMedia('(hover: hover)').matches) {
+  if (badge && window.matchMedia('(hover: hover)').matches) {
     document.addEventListener('mousemove', (e) => {
       badge.style.left = e.clientX + 'px';
       badge.style.top = e.clientY + 'px';
     });
-    galleryEls.forEach((el) => {
-      el.addEventListener('mouseenter', () => {
+    document.body.addEventListener('mouseover', (e) => {
+      const item = e.target.closest('.gallery .gallery-item');
+      if (item) {
         badge.classList.add('visible');
-        el.classList.add('cursor-hidden');
-      });
-      el.addEventListener('mouseleave', () => {
+        item.classList.add('cursor-hidden');
+      }
+    });
+    document.body.addEventListener('mouseout', (e) => {
+      const item = e.target.closest('.gallery .gallery-item');
+      if (item && !item.contains(e.relatedTarget)) {
         badge.classList.remove('visible');
-        el.classList.remove('cursor-hidden');
-      });
+        item.classList.remove('cursor-hidden');
+      }
     });
   }
 
-  // Sticky inquire bar
+  // ------ Sticky inquire bar ------
   const sticky = document.querySelector('.sticky-inquire');
   if (sticky) {
     let dismissed = sessionStorage.getItem('inquire-dismissed') === '1';
@@ -290,4 +363,7 @@
       });
     }
   }
+
+  // Kick off dynamic rendering after main listeners are set up
+  renderDynamicSources();
 })();

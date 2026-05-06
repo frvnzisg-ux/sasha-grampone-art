@@ -1,0 +1,306 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Paintings — Sasha Grampone Admin</title>
+  <meta name="robots" content="noindex, nofollow" />
+  <link rel="icon" type="image/svg+xml" href="/images/favicon.svg" />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400;1,500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/admin/admin.css" />
+</head>
+<body>
+  <div class="admin-shell">
+    <aside class="admin-sidebar">
+      <span class="admin-brand">Sasha Grampone</span>
+      <span class="admin-brand-sub">Studio Admin</span>
+      <ul class="admin-nav">
+        <li><a href="/admin/">Dashboard</a></li>
+        <li><a href="/admin/paintings.html" class="active">Paintings</a></li>
+        <li><a href="/admin/leads.html">Leads</a></li>
+        <li><a href="/admin/clients.html">Clients</a></li>
+        <li><a href="/admin/projects.html">Projects</a></li>
+      </ul>
+      <div class="admin-back">
+        <a href="/" target="_blank">View public site →</a>
+        <br><br>
+        <a href="#" id="logout-link">Sign out</a>
+      </div>
+    </aside>
+
+    <main class="admin-main">
+      <div class="admin-header">
+        <div>
+          <h1>Paintings</h1>
+          <p>The portfolio gallery and homepage features. Add a new painting and it appears on the live site after the next deploy (~30 sec).</p>
+        </div>
+        <button class="btn btn-primary" id="new-btn">+ Add Painting</button>
+      </div>
+
+      <div class="subject-tabs" id="subject-tabs">
+        <button data-subject="" class="active">All</button>
+        <button data-subject="pets">Pet Portraits</button>
+        <button data-subject="people">Human Portraits</button>
+        <button data-subject="originals">Originals</button>
+        <button data-subject="wip">Works in Progress</button>
+        <button data-subject="featured">★ Homepage Featured</button>
+      </div>
+
+      <div class="paint-grid" id="grid">
+        <div class="empty-state" style="grid-column: 1 / -1;"><p>Loading…</p></div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Drawer -->
+  <div class="drawer-overlay"></div>
+  <aside class="drawer" id="drawer">
+    <div class="drawer-head">
+      <h2 id="drawer-title">New Painting</h2>
+      <button class="drawer-close" aria-label="Close">×</button>
+    </div>
+    <div class="drawer-body">
+      <form id="paint-form">
+        <input type="hidden" id="f-id" />
+        <input type="hidden" id="f-image" />
+
+        <!-- Image upload -->
+        <div class="field">
+          <label>Painting Image</label>
+          <label class="dropzone" id="drop">
+            <input type="file" accept="image/*" id="f-file" />
+            <img class="preview" id="preview" alt="" />
+            <div class="empty-msg">
+              Click or drop an image here.<br>
+              <small>JPEG / PNG / WebP — auto-resized to 1600px wide.</small>
+            </div>
+            <div class="change-msg">Click to replace</div>
+            <div class="progress"></div>
+          </label>
+        </div>
+
+        <div class="field-row">
+          <div class="field"><label>Title</label><input type="text" id="f-title" required placeholder="e.g. Marlowe" /></div>
+          <div class="field"><label>Category</label>
+            <select id="f-subject">
+              <option value="pets">Pet Portrait</option>
+              <option value="people">Human Portrait</option>
+              <option value="originals">Original Artwork</option>
+              <option value="wip">Work in Progress</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="field"><label>Short Label (shown on hover)</label>
+          <input type="text" id="f-label" placeholder="e.g. Pet Portrait · Oil" />
+        </div>
+
+        <div class="field"><label>Caption / Lightbox Detail</label>
+          <input type="text" id="f-meta" placeholder="e.g. Oil on linen · 16 × 20 in · 2025" />
+        </div>
+
+        <div class="field"><label>Image Alt Text (for screen readers + SEO)</label>
+          <input type="text" id="f-alt" placeholder="e.g. Marlowe — golden retriever portrait" />
+        </div>
+
+        <div class="field-row">
+          <div class="field">
+            <label>Featured on Homepage</label>
+            <select id="f-featured">
+              <option value="false">No</option>
+              <option value="true">Yes — show in homepage feature grid</option>
+            </select>
+          </div>
+          <div class="field"><label>Order</label>
+            <input type="number" id="f-order" placeholder="1" min="0" step="1" />
+          </div>
+        </div>
+      </form>
+    </div>
+    <div class="drawer-foot">
+      <button class="btn btn-danger" id="del-btn" style="display:none;">Delete</button>
+      <div style="display:flex; gap:0.6rem; margin-left:auto;">
+        <button class="btn btn-secondary drawer-close">Cancel</button>
+        <button class="btn btn-primary" id="save-btn">Save</button>
+      </div>
+    </div>
+  </aside>
+
+  <script src="/admin/admin.js"></script>
+  <script>
+    document.getElementById("logout-link").addEventListener("click", (e) => { e.preventDefault(); ADMIN.logout(); });
+
+    let data = { items: [] };
+    let currentSubject = "";
+
+    function render() {
+      const items = data.items
+        .filter((p) => {
+          if (!currentSubject) return true;
+          if (currentSubject === "featured") return p.featured;
+          return p.subject === currentSubject;
+        })
+        .sort((a, b) => (a.order || 999) - (b.order || 999));
+
+      const grid = document.getElementById("grid");
+      if (!items.length) {
+        grid.innerHTML = `<div class="empty-state" style="grid-column: 1 / -1;">
+          <h3>${data.items.length === 0 ? "No paintings yet." : "Nothing in this view."}</h3>
+          <p>${data.items.length === 0 ? "Click &ldquo;+ Add Painting&rdquo; to upload your first piece." : "Pick a different category or clear the filter."}</p>
+        </div>`;
+        return;
+      }
+      grid.innerHTML = items.map((p) => `
+        <div class="paint-card" data-id="${p.id}">
+          <div class="thumb">
+            <img src="${ADMIN.esc(p.image)}" alt="${ADMIN.esc(p.imageAlt || p.title)}" loading="lazy" />
+            <div class="badges">
+              <span class="badge">${ADMIN.esc(subjectLabel(p.subject))}</span>
+              ${p.featured ? '<span class="badge featured">★ Featured</span>' : ''}
+            </div>
+          </div>
+          <div class="info">
+            <strong>${ADMIN.esc(p.title)}</strong>
+            <div class="meta">${ADMIN.esc(p.meta || p.label || '')}</div>
+          </div>
+        </div>
+      `).join("");
+      grid.querySelectorAll(".paint-card").forEach((card) => {
+        card.addEventListener("click", () => {
+          const id = card.dataset.id;
+          openDrawer(data.items.find((x) => x.id === id));
+        });
+      });
+    }
+
+    function subjectLabel(s) {
+      return ({ pets: "Pet", people: "Human", originals: "Original", wip: "WIP" })[s] || s;
+    }
+
+    function openDrawer(p) {
+      const f = (id) => document.getElementById(id);
+      const isNew = !p;
+      f("drawer-title").textContent = isNew ? "New Painting" : "Edit Painting";
+      f("f-id").value = p?.id || "";
+      f("f-image").value = p?.image || "";
+      f("f-title").value = p?.title || "";
+      f("f-subject").value = p?.subject || "pets";
+      f("f-label").value = p?.label || "";
+      f("f-meta").value = p?.meta || "";
+      f("f-alt").value = p?.imageAlt || "";
+      f("f-featured").value = p?.featured ? "true" : "false";
+      f("f-order").value = p?.order ?? data.items.length + 1;
+
+      const drop = f("drop");
+      const preview = f("preview");
+      if (p?.image) {
+        preview.src = p.image;
+        drop.classList.add("has-image");
+      } else {
+        preview.removeAttribute("src");
+        drop.classList.remove("has-image");
+      }
+      drop.classList.remove("uploading");
+
+      f("del-btn").style.display = isNew ? "none" : "inline-flex";
+      ADMIN.openDrawer();
+    }
+
+    async function persist() {
+      try {
+        await ADMIN.save("paintings.json", data);
+        ADMIN.toast("Saved. Live in ~30 seconds.", "success");
+      } catch (err) {
+        ADMIN.toast(err.message, "error");
+      }
+    }
+
+    // ---- File handling ----
+    const drop = document.getElementById("drop");
+    const fileInput = document.getElementById("f-file");
+    const preview = document.getElementById("preview");
+
+    async function handleFile(file) {
+      if (!file) return;
+      drop.classList.add("uploading");
+      try {
+        const result = await ADMIN.uploadImage(file, { maxWidth: 1600, quality: 0.85 });
+        document.getElementById("f-image").value = result.url;
+        preview.src = result.url;
+        drop.classList.add("has-image");
+        ADMIN.toast(`Uploaded ${result.filename}.`, "success");
+      } catch (err) {
+        ADMIN.toast(err.message, "error");
+      } finally {
+        drop.classList.remove("uploading");
+      }
+    }
+
+    fileInput.addEventListener("change", () => handleFile(fileInput.files[0]));
+
+    drop.addEventListener("dragover", (e) => { e.preventDefault(); drop.classList.add("drag"); });
+    drop.addEventListener("dragleave", () => drop.classList.remove("drag"));
+    drop.addEventListener("drop", (e) => {
+      e.preventDefault();
+      drop.classList.remove("drag");
+      const f = e.dataTransfer.files[0];
+      if (f) handleFile(f);
+    });
+
+    document.getElementById("new-btn").addEventListener("click", () => openDrawer());
+
+    document.getElementById("subject-tabs").addEventListener("click", (e) => {
+      if (e.target.tagName !== "BUTTON") return;
+      currentSubject = e.target.dataset.subject;
+      document.querySelectorAll(".subject-tabs button").forEach((b) => b.classList.toggle("active", b === e.target));
+      render();
+    });
+
+    document.getElementById("save-btn").addEventListener("click", async () => {
+      const f = (id) => document.getElementById(id).value.trim();
+      const title = f("f-title");
+      if (!title) { ADMIN.toast("Title is required.", "error"); return; }
+      const image = f("f-image");
+      if (!image) { ADMIN.toast("Please upload an image.", "error"); return; }
+
+      const id = f("f-id") || ADMIN.id();
+      const existing = data.items.find((x) => x.id === id);
+      const now = new Date().toISOString();
+      const order = parseInt(f("f-order"), 10);
+      const painting = {
+        id,
+        title,
+        subject: f("f-subject") || "pets",
+        image,
+        imageAlt: f("f-alt") || title,
+        label: f("f-label") || "",
+        meta: f("f-meta") || "",
+        featured: f("f-featured") === "true",
+        order: isFinite(order) ? order : (data.items.length + 1),
+        createdAt: existing?.createdAt || now,
+        updatedAt: now,
+      };
+      if (existing) Object.assign(existing, painting); else data.items.unshift(painting);
+      ADMIN.closeDrawer();
+      render();
+      persist();
+    });
+
+    document.getElementById("del-btn").addEventListener("click", async () => {
+      const id = document.getElementById("f-id").value;
+      const p = data.items.find((x) => x.id === id);
+      if (!p) return;
+      if (!ADMIN.confirmDelete(`painting "${p.title}"`)) return;
+      data.items = data.items.filter((x) => x.id !== id);
+      ADMIN.closeDrawer();
+      render();
+      persist();
+    });
+
+    (async function () {
+      data = await ADMIN.load("paintings.json");
+      render();
+    })();
+  </script>
+</body>
+</html>

@@ -120,6 +120,62 @@ Once you own a domain (e.g. `sashagramponeart.com`):
 2. Update the DNS records as Vercel instructs (usually a single `CNAME` or `A` record)
 3. Find-and-replace `sashagramponeart.com` across the HTML files if you used a different domain — this updates the OG/Twitter share URLs
 
+## Admin / CRM (`/admin`)
+
+A password-gated admin area lives at `/admin/` with a small CRM for tracking leads, clients, and projects.
+
+**How it works**
+- Vercel Edge Middleware ([`middleware.js`](middleware.js)) gates every URL under `/admin/*` and `/api/admin/*` with HTTP Basic Auth — when you visit, the browser pops up its native username/password dialog.
+- Data lives in [`data/leads.json`](data/leads.json), [`data/clients.json`](data/clients.json), and [`data/projects.json`](data/projects.json) — plain JSON files in this repo.
+- Saving in admin calls `/api/admin/save`, which commits the new JSON to GitHub via the GitHub API. Vercel auto-redeploys (~30 sec) and the data is live.
+- Every change shows up in the Git history as a commit — you have a free audit log.
+
+**Pages**
+- `/admin/` — dashboard with counts and recent activity
+- `/admin/leads.html` — inquiries / prospects with status pipeline (New → Contacted → Quoted → Won / Lost)
+- `/admin/clients.html` — full client profiles (name, email, phone, address, Instagram, notes) and linked projects
+- `/admin/projects.html` — active commissions with stages (Sketch → Underpainting → Detail → Shipped → Done), pricing, deposit tracking
+
+### Setup (one-time)
+
+In Vercel → Project → Settings → **Environment Variables**, set four values for **Production** (and optionally Preview):
+
+| Variable | What | Example |
+| --- | --- | --- |
+| `ADMIN_USERNAME` | Username you'll type at the login dialog | `sasha` |
+| `ADMIN_PASSWORD` | Strong password (use a password manager) | `(at least 16 random chars)` |
+| `GITHUB_TOKEN` | A fine-grained GitHub Personal Access Token | `github_pat_...` |
+| `GITHUB_REPO` | Repo to commit data to | `frvnzisg-ux/sasha-grampone-art` |
+
+**Generating the GitHub token:**
+
+1. Go to **https://github.com/settings/personal-access-tokens/new**
+2. **Token name:** `Sasha Grampone Admin`
+3. **Resource owner:** your username
+4. **Expiration:** 1 year (or your preference)
+5. **Repository access:** *Only select repositories* → `sasha-grampone-art`
+6. **Repository permissions** → **Contents: Read and write**
+7. Generate, copy the token (starts with `github_pat_`), paste into the Vercel env var
+
+After setting the env vars, **redeploy** (Vercel → Deployments → ⋯ → Redeploy) so the new env vars take effect.
+
+### Using the admin
+
+1. Visit **`https://your-vercel-url.vercel.app/admin/`**
+2. Browser shows a Sign In dialog → enter your `ADMIN_USERNAME` + `ADMIN_PASSWORD`
+3. Add leads, clients, projects via the "+ Add" buttons
+4. Each save triggers a commit + redeploy (~30 sec until the live site reflects the change)
+
+**Sign out** = use the link in the sidebar, or close all browser windows for the site (browsers cache Basic Auth credentials per session).
+
+### Security notes
+
+- Vercel always serves over HTTPS, so Basic Auth credentials are encrypted in transit.
+- The middleware is enforced on the **Edge Runtime** (Vercel's CDN tier), which means even API routes are protected before they execute.
+- The GitHub token only has `Contents: read/write` scope on this single repo — it can't touch your other repos or your account.
+- **Use a unique strong password** for `ADMIN_PASSWORD`. There's no rate-limiting on Basic Auth out of the box.
+- If you need stricter security later, swap to a session-based login flow with rate-limiting (a few hours of work).
+
 ## Tech notes
 
 - No JavaScript framework. Vanilla DOM, IntersectionObserver, FormData, native `<details>`.

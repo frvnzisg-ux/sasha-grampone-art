@@ -1,0 +1,252 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Leads — Sasha Grampone Admin</title>
+  <meta name="robots" content="noindex, nofollow" />
+  <link rel="icon" type="image/svg+xml" href="/images/favicon.svg" />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400;1,500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/admin/admin.css" />
+</head>
+<body>
+  <div class="admin-shell">
+    <aside class="admin-sidebar">
+      <span class="admin-brand">Sasha Grampone</span>
+      <span class="admin-brand-sub">Studio Admin</span>
+      <ul class="admin-nav">
+        <li><a href="/admin/">Dashboard</a></li>
+        <li><a href="/admin/leads.html" class="active">Leads</a></li>
+        <li><a href="/admin/clients.html">Clients</a></li>
+        <li><a href="/admin/projects.html">Projects</a></li>
+      </ul>
+      <div class="admin-back">
+        <a href="/" target="_blank">View public site →</a>
+        <br><br>
+        <a href="#" id="logout-link">Sign out</a>
+      </div>
+    </aside>
+
+    <main class="admin-main">
+      <div class="admin-header">
+        <div>
+          <h1>Leads</h1>
+          <p>Inquiries, prospects, and people who've reached out.</p>
+        </div>
+        <button class="btn btn-primary" id="new-btn">+ Add Lead</button>
+      </div>
+
+      <div class="toolbar">
+        <input type="text" class="search" id="search" placeholder="Search by name, email, or notes…" />
+        <select id="filter-status">
+          <option value="">All statuses</option>
+          <option value="new">New</option>
+          <option value="contacted">Contacted</option>
+          <option value="quoted">Quoted</option>
+          <option value="won">Won</option>
+          <option value="lost">Lost</option>
+        </select>
+      </div>
+
+      <div class="table-wrap">
+        <table class="tbl" id="tbl">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Subject</th>
+              <th>Status</th>
+              <th>Created</th>
+              <th>Contact</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody><tr><td colspan="6" class="empty-state"><p>Loading…</p></td></tr></tbody>
+        </table>
+      </div>
+    </main>
+  </div>
+
+  <!-- Drawer -->
+  <div class="drawer-overlay"></div>
+  <aside class="drawer" id="drawer">
+    <div class="drawer-head">
+      <h2 id="drawer-title">New Lead</h2>
+      <button class="drawer-close" aria-label="Close">×</button>
+    </div>
+    <div class="drawer-body">
+      <form id="lead-form">
+        <input type="hidden" id="f-id" />
+        <div class="field-row">
+          <div class="field"><label>Name</label><input type="text" id="f-name" required /></div>
+          <div class="field"><label>Status</label>
+            <select id="f-status">
+              <option value="new">New</option>
+              <option value="contacted">Contacted</option>
+              <option value="quoted">Quoted</option>
+              <option value="won">Won</option>
+              <option value="lost">Lost</option>
+            </select>
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field"><label>Email</label><input type="email" id="f-email" /></div>
+          <div class="field"><label>Phone</label><input type="tel" id="f-phone" /></div>
+        </div>
+        <div class="field-row">
+          <div class="field"><label>Subject Type</label>
+            <select id="f-subject">
+              <option value="">—</option>
+              <option>Pet portrait</option>
+              <option>Person — single</option>
+              <option>Couple or family</option>
+              <option>Memorial portrait</option>
+              <option>Other</option>
+            </select>
+          </div>
+          <div class="field"><label>Source</label>
+            <select id="f-source">
+              <option value="">—</option>
+              <option>Website form</option>
+              <option>Instagram</option>
+              <option>Referral</option>
+              <option>Email</option>
+              <option>Other</option>
+            </select>
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field"><label>Desired Size</label><input type="text" id="f-size" placeholder="e.g. 16 × 20 in" /></div>
+          <div class="field"><label>Deadline</label><input type="text" id="f-deadline" placeholder="e.g. Anniversary, Dec 2026" /></div>
+        </div>
+        <div class="field"><label>Notes</label><textarea id="f-notes" placeholder="What did they say? Anything to remember?"></textarea></div>
+      </form>
+    </div>
+    <div class="drawer-foot">
+      <button class="btn btn-danger" id="del-btn" style="display:none;">Delete</button>
+      <div style="display:flex; gap:0.6rem; margin-left:auto;">
+        <button class="btn btn-secondary drawer-close">Cancel</button>
+        <button class="btn btn-primary" id="save-btn">Save</button>
+      </div>
+    </div>
+  </aside>
+
+  <script src="/admin/admin.js"></script>
+  <script>
+    document.getElementById("logout-link").addEventListener("click", (e) => { e.preventDefault(); ADMIN.logout(); });
+
+    let data = { items: [] };
+
+    function render() {
+      const q = document.getElementById("search").value.trim().toLowerCase();
+      const filt = document.getElementById("filter-status").value;
+      const items = data.items
+        .filter((l) => !filt || l.status === filt)
+        .filter((l) => {
+          if (!q) return true;
+          return [l.name, l.email, l.phone, l.notes, l.subject]
+            .filter(Boolean).join(" ").toLowerCase().includes(q);
+        })
+        .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+
+      const tbody = document.querySelector("#tbl tbody");
+      if (!items.length) {
+        tbody.innerHTML = `<tr><td colspan="6" class="empty-state">
+          <h3>No leads ${q || filt ? "matching" : "yet"}.</h3>
+          <p>${q || filt ? "Try clearing the filters." : "Click &ldquo;+ Add Lead&rdquo; to capture your first inquiry."}</p>
+        </td></tr>`;
+        return;
+      }
+      tbody.innerHTML = items.map((l) => `
+        <tr data-id="${l.id}">
+          <td><strong>${ADMIN.esc(l.name)}</strong></td>
+          <td>${ADMIN.esc(l.subject || "—")}</td>
+          <td><span class="pill ${l.status || ""}">${l.status || "new"}</span></td>
+          <td title="${ADMIN.fmtDate(l.createdAt)}">${ADMIN.fmtRelative(l.createdAt)}</td>
+          <td>${l.email ? `<a href="mailto:${ADMIN.esc(l.email)}">${ADMIN.esc(l.email)}</a>` : ""}</td>
+          <td class="actions"><button class="btn btn-secondary btn-sm edit">Open</button></td>
+        </tr>
+      `).join("");
+      tbody.querySelectorAll("tr").forEach((row) => {
+        row.querySelector(".edit").addEventListener("click", () => {
+          const id = row.dataset.id;
+          openDrawer(data.items.find((x) => x.id === id));
+        });
+      });
+    }
+
+    function openDrawer(lead) {
+      const f = (id) => document.getElementById(id);
+      const isNew = !lead;
+      f("drawer-title").textContent = isNew ? "New Lead" : "Edit Lead";
+      f("f-id").value = lead?.id || "";
+      f("f-name").value = lead?.name || "";
+      f("f-email").value = lead?.email || "";
+      f("f-phone").value = lead?.phone || "";
+      f("f-status").value = lead?.status || "new";
+      f("f-subject").value = lead?.subject || "";
+      f("f-source").value = lead?.source || "";
+      f("f-size").value = lead?.size || "";
+      f("f-deadline").value = lead?.deadline || "";
+      f("f-notes").value = lead?.notes || "";
+      f("del-btn").style.display = isNew ? "none" : "inline-flex";
+      ADMIN.openDrawer();
+    }
+
+    async function persist() {
+      try {
+        await ADMIN.save("leads.json", data);
+        ADMIN.toast("Saved. Live in ~30 seconds (Vercel rebuild).", "success");
+      } catch (err) {
+        ADMIN.toast(err.message, "error");
+      }
+    }
+
+    document.getElementById("new-btn").addEventListener("click", () => openDrawer());
+    document.getElementById("search").addEventListener("input", render);
+    document.getElementById("filter-status").addEventListener("change", render);
+
+    document.getElementById("save-btn").addEventListener("click", async () => {
+      const f = (id) => document.getElementById(id).value.trim();
+      const name = f("f-name");
+      if (!name) { ADMIN.toast("Name is required.", "error"); return; }
+      const id = f("f-id") || ADMIN.id();
+      const existing = data.items.find((x) => x.id === id);
+      const now = new Date().toISOString();
+      const lead = {
+        id,
+        name,
+        email: f("f-email"),
+        phone: f("f-phone"),
+        status: f("f-status") || "new",
+        subject: f("f-subject"),
+        source: f("f-source"),
+        size: f("f-size"),
+        deadline: f("f-deadline"),
+        notes: f("f-notes"),
+        createdAt: existing?.createdAt || now,
+        updatedAt: now,
+      };
+      if (existing) Object.assign(existing, lead); else data.items.unshift(lead);
+      ADMIN.closeDrawer();
+      render();
+      persist();
+    });
+
+    document.getElementById("del-btn").addEventListener("click", async () => {
+      const id = document.getElementById("f-id").value;
+      const lead = data.items.find((x) => x.id === id);
+      if (!lead) return;
+      if (!ADMIN.confirmDelete(`lead "${lead.name}"`)) return;
+      data.items = data.items.filter((x) => x.id !== id);
+      ADMIN.closeDrawer();
+      render();
+      persist();
+    });
+
+    (async function () {
+      data = await ADMIN.load("leads.json");
+      render();
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Admin — Sasha Grampone</title>
+  <meta name="robots" content="noindex, nofollow" />
+  <link rel="icon" type="image/svg+xml" href="/images/favicon.svg" />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400;1,500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/admin/admin.css" />
+</head>
+<body>
+  <div class="admin-shell">
+    <aside class="admin-sidebar">
+      <span class="admin-brand">Sasha Grampone</span>
+      <span class="admin-brand-sub">Studio Admin</span>
+      <ul class="admin-nav">
+        <li><a href="/admin/" class="active">Dashboard</a></li>
+        <li><a href="/admin/leads.html">Leads</a></li>
+        <li><a href="/admin/clients.html">Clients</a></li>
+        <li><a href="/admin/projects.html">Projects</a></li>
+      </ul>
+      <div class="admin-back">
+        <a href="/" target="_blank">View public site →</a>
+        <br><br>
+        <a href="#" id="logout-link">Sign out</a>
+      </div>
+    </aside>
+
+    <main class="admin-main">
+      <div class="admin-header">
+        <div>
+          <h1>Welcome back.</h1>
+          <p>A quiet overview of leads, clients, and current commissions.</p>
+        </div>
+      </div>
+
+      <div class="stat-grid" id="stats">
+        <!-- filled by JS -->
+      </div>
+
+      <h2 style="margin-top: 2rem; font-style: italic;">Recent activity</h2>
+      <div class="table-wrap">
+        <table class="tbl" id="recent-tbl">
+          <thead>
+            <tr>
+              <th>When</th>
+              <th>Type</th>
+              <th>Detail</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody><tr><td colspan="4" class="empty-state"><p>Loading…</p></td></tr></tbody>
+        </table>
+      </div>
+    </main>
+  </div>
+
+  <script src="/admin/admin.js"></script>
+  <script>
+    document.getElementById("logout-link").addEventListener("click", (e) => {
+      e.preventDefault();
+      ADMIN.logout();
+    });
+
+    (async function () {
+      const [leads, clients, projects] = await Promise.all([
+        ADMIN.load("leads.json"),
+        ADMIN.load("clients.json"),
+        ADMIN.load("projects.json"),
+      ]);
+
+      const newLeads = leads.items.filter((l) => l.status === "new").length;
+      const activeProjects = projects.items.filter((p) => p.status && p.status !== "done").length;
+      const won = leads.items.filter((l) => l.status === "won").length;
+
+      document.getElementById("stats").innerHTML = `
+        <div class="stat-card">
+          <div class="label">Open Leads</div>
+          <div class="num">${newLeads}</div>
+          <div class="sub">Need a reply</div>
+        </div>
+        <div class="stat-card">
+          <div class="label">Active Projects</div>
+          <div class="num">${activeProjects}</div>
+          <div class="sub">In studio now</div>
+        </div>
+        <div class="stat-card">
+          <div class="label">Clients</div>
+          <div class="num">${clients.items.length}</div>
+          <div class="sub">Total in CRM</div>
+        </div>
+        <div class="stat-card">
+          <div class="label">Wins</div>
+          <div class="num">${won}</div>
+          <div class="sub">Lifetime commissions</div>
+        </div>
+      `;
+
+      // Recent: combine recent leads & projects, sort by createdAt desc
+      const events = [];
+      leads.items.forEach((l) => events.push({
+        when: l.createdAt,
+        type: "Lead",
+        detail: `${l.name || "Unnamed"} · ${l.subject || "—"}`,
+        status: l.status,
+        link: "/admin/leads.html",
+      }));
+      projects.items.forEach((p) => events.push({
+        when: p.updatedAt || p.createdAt,
+        type: "Project",
+        detail: `${p.title || "Untitled"} · ${p.size || "—"}`,
+        status: p.status,
+        link: "/admin/projects.html",
+      }));
+      events.sort((a, b) => new Date(b.when || 0) - new Date(a.when || 0));
+      const tbody = document.querySelector("#recent-tbl tbody");
+      if (events.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="4" class="empty-state">
+          <h3>Nothing yet.</h3>
+          <p>Add your first lead or project from the sidebar to get started.</p>
+        </td></tr>`;
+      } else {
+        tbody.innerHTML = events.slice(0, 10).map((e) => `
+          <tr>
+            <td><a href="${e.link}">${ADMIN.fmtRelative(e.when)}</a></td>
+            <td>${e.type}</td>
+            <td>${ADMIN.esc(e.detail)}</td>
+            <td>${e.status ? `<span class="pill ${e.status}">${e.status}</span>` : "—"}</td>
+          </tr>
+        `).join("");
+      }
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Clients — Sasha Grampone Admin</title>
+  <meta name="robots" content="noindex, nofollow" />
+  <link rel="icon" type="image/svg+xml" href="/images/favicon.svg" />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400;1,500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/admin/admin.css" />
+</head>
+<body>
+  <div class="admin-shell">
+    <aside class="admin-sidebar">
+      <span class="admin-brand">Sasha Grampone</span>
+      <span class="admin-brand-sub">Studio Admin</span>
+      <ul class="admin-nav">
+        <li><a href="/admin/">Dashboard</a></li>
+        <li><a href="/admin/leads.html">Leads</a></li>
+        <li><a href="/admin/clients.html" class="active">Clients</a></li>
+        <li><a href="/admin/projects.html">Projects</a></li>
+      </ul>
+      <div class="admin-back">
+        <a href="/" target="_blank">View public site →</a>
+        <br><br>
+        <a href="#" id="logout-link">Sign out</a>
+      </div>
+    </aside>
+
+    <main class="admin-main">
+      <div class="admin-header">
+        <div>
+          <h1>Clients</h1>
+          <p>People who've commissioned a piece — full contact details and project history.</p>
+        </div>
+        <button class="btn btn-primary" id="new-btn">+ Add Client</button>
+      </div>
+
+      <div class="toolbar">
+        <input type="text" class="search" id="search" placeholder="Search by name, email, or notes…" />
+      </div>
+
+      <div class="table-wrap">
+        <table class="tbl" id="tbl">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Phone</th>
+              <th>Location</th>
+              <th>Projects</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody><tr><td colspan="6" class="empty-state"><p>Loading…</p></td></tr></tbody>
+        </table>
+      </div>
+    </main>
+  </div>
+
+  <!-- Drawer -->
+  <div class="drawer-overlay"></div>
+  <aside class="drawer" id="drawer">
+    <div class="drawer-head">
+      <h2 id="drawer-title">New Client</h2>
+      <button class="drawer-close" aria-label="Close">×</button>
+    </div>
+    <div class="drawer-body">
+      <form id="client-form">
+        <input type="hidden" id="f-id" />
+        <div class="field"><label>Name</label><input type="text" id="f-name" required /></div>
+        <div class="field-row">
+          <div class="field"><label>Email</label><input type="email" id="f-email" /></div>
+          <div class="field"><label>Phone</label><input type="tel" id="f-phone" /></div>
+        </div>
+        <div class="field"><label>Address</label><textarea id="f-address" placeholder="Street, City, Country — used for shipping" style="min-height: 70px;"></textarea></div>
+        <div class="field-row">
+          <div class="field"><label>Instagram</label><input type="text" id="f-instagram" placeholder="@handle" /></div>
+          <div class="field"><label>Referred by</label><input type="text" id="f-referrer" /></div>
+        </div>
+        <div class="field"><label>Notes</label><textarea id="f-notes" placeholder="Anything about this client — preferences, family pets, prior conversations…"></textarea></div>
+        <div id="project-list" style="margin-top: 1.5rem;">
+          <label style="font-size: 0.7rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--ink-soft); font-weight: 500; display: block; margin-bottom: 0.4rem;">Projects</label>
+          <div id="project-list-content" style="font-size: 0.92rem; color: var(--ink-soft);">—</div>
+        </div>
+      </form>
+    </div>
+    <div class="drawer-foot">
+      <button class="btn btn-danger" id="del-btn" style="display:none;">Delete</button>
+      <div style="display:flex; gap:0.6rem; margin-left:auto;">
+        <button class="btn btn-secondary drawer-close">Cancel</button>
+        <button class="btn btn-primary" id="save-btn">Save</button>
+      </div>
+    </div>
+  </aside>
+
+  <script src="/admin/admin.js"></script>
+  <script>
+    document.getElementById("logout-link").addEventListener("click", (e) => { e.preventDefault(); ADMIN.logout(); });
+
+    let data = { items: [] };
+    let projects = { items: [] };
+
+    function projectsFor(clientId) {
+      return projects.items.filter((p) => p.clientId === clientId);
+    }
+
+    function render() {
+      const q = document.getElementById("search").value.trim().toLowerCase();
+      const items = data.items
+        .filter((c) => {
+          if (!q) return true;
+          return [c.name, c.email, c.phone, c.notes, c.address]
+            .filter(Boolean).join(" ").toLowerCase().includes(q);
+        })
+        .sort((a, b) => (a.name || "").localeCompare(b.name || ""));
+
+      const tbody = document.querySelector("#tbl tbody");
+      if (!items.length) {
+        tbody.innerHTML = `<tr><td colspan="6" class="empty-state">
+          <h3>No clients ${q ? "matching" : "yet"}.</h3>
+          <p>${q ? "Try a different search." : "Click &ldquo;+ Add Client&rdquo; to add your first."}</p>
+        </td></tr>`;
+        return;
+      }
+      tbody.innerHTML = items.map((c) => {
+        const projCount = projectsFor(c.id).length;
+        const loc = (c.address || "").split(",").slice(-2).join(", ").trim();
+        return `
+        <tr data-id="${c.id}">
+          <td><strong>${ADMIN.esc(c.name)}</strong></td>
+          <td>${c.email ? `<a href="mailto:${ADMIN.esc(c.email)}">${ADMIN.esc(c.email)}</a>` : "—"}</td>
+          <td>${c.phone ? `<a href="tel:${ADMIN.esc(c.phone)}">${ADMIN.esc(c.phone)}</a>` : "—"}</td>
+          <td>${ADMIN.esc(loc) || "—"}</td>
+          <td>${projCount > 0 ? `<a href="/admin/projects.html?client=${c.id}">${projCount}</a>` : "—"}</td>
+          <td class="actions"><button class="btn btn-secondary btn-sm edit">Open</button></td>
+        </tr>`;
+      }).join("");
+      tbody.querySelectorAll("tr").forEach((row) => {
+        row.querySelector(".edit").addEventListener("click", () => {
+          const id = row.dataset.id;
+          openDrawer(data.items.find((x) => x.id === id));
+        });
+      });
+    }
+
+    function openDrawer(client) {
+      const f = (id) => document.getElementById(id);
+      const isNew = !client;
+      f("drawer-title").textContent = isNew ? "New Client" : "Edit Client";
+      f("f-id").value = client?.id || "";
+      f("f-name").value = client?.name || "";
+      f("f-email").value = client?.email || "";
+      f("f-phone").value = client?.phone || "";
+      f("f-address").value = client?.address || "";
+      f("f-instagram").value = client?.instagram || "";
+      f("f-referrer").value = client?.referrer || "";
+      f("f-notes").value = client?.notes || "";
+      f("del-btn").style.display = isNew ? "none" : "inline-flex";
+
+      // Show linked projects
+      const list = document.getElementById("project-list-content");
+      if (isNew) {
+        list.innerHTML = "<em style='color:var(--muted);'>(Save the client first, then link projects from the Projects page.)</em>";
+      } else {
+        const linked = projectsFor(client.id);
+        if (!linked.length) {
+          list.innerHTML = "<em style='color:var(--muted);'>No projects yet. Add one from the Projects page.</em>";
+        } else {
+          list.innerHTML = linked.map((p) => `
+            <div style="padding: 0.5rem 0; border-bottom: 1px solid var(--line);">
+              <a href="/admin/projects.html?id=${p.id}"><strong>${ADMIN.esc(p.title || "Untitled")}</strong></a>
+              · <span class="pill ${p.status || ''}">${p.status || "—"}</span>
+              <div style="font-size: 0.85rem; color: var(--muted); margin-top: 2px;">${ADMIN.esc(p.size || "")}${p.medium ? " · " + ADMIN.esc(p.medium) : ""}</div>
+            </div>
+          `).join("");
+        }
+      }
+      ADMIN.openDrawer();
+    }
+
+    async function persist() {
+      try {
+        await ADMIN.save("clients.json", data);
+        ADMIN.toast("Saved. Live in ~30 seconds.", "success");
+      } catch (err) {
+        ADMIN.toast(err.message, "error");
+      }
+    }
+
+    document.getElementById("new-btn").addEventListener("click", () => openDrawer());
+    document.getElementById("search").addEventListener("input", render);
+
+    document.getElementById("save-btn").addEventListener("click", async () => {
+      const f = (id) => document.getElementById(id).value.trim();
+      const name = f("f-name");
+      if (!name) { ADMIN.toast("Name is required.", "error"); return; }
+      const id = f("f-id") || ADMIN.id();
+      const existing = data.items.find((x) => x.id === id);
+      const now = new Date().toISOString();
+      const client = {
+        id,
+        name,
+        email: f("f-email"),
+        phone: f("f-phone"),
+        address: f("f-address"),
+        instagram: f("f-instagram"),
+        referrer: f("f-referrer"),
+        notes: f("f-notes"),
+        createdAt: existing?.createdAt || now,
+        updatedAt: now,
+      };
+      if (existing) Object.assign(existing, client); else data.items.unshift(client);
+      ADMIN.closeDrawer();
+      render();
+      persist();
+    });
+
+    document.getElementById("del-btn").addEventListener("click", async () => {
+      const id = document.getElementById("f-id").value;
+      const c = data.items.find((x) => x.id === id);
+      if (!c) return;
+      const projCount = projectsFor(id).length;
+      if (projCount > 0) {
+        if (!confirm(`This client has ${projCount} project(s). Delete anyway? Projects will be unlinked but kept.`)) return;
+      } else if (!ADMIN.confirmDelete(`client "${c.name}"`)) return;
+      data.items = data.items.filter((x) => x.id !== id);
+      ADMIN.closeDrawer();
+      render();
+      persist();
+    });
+
+    (async function () {
+      [data, projects] = await Promise.all([
+        ADMIN.load("clients.json"),
+        ADMIN.load("projects.json"),
+      ]);
+      render();
+    })();
+  </script>
+</body>
+</html>

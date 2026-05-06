@@ -1,0 +1,302 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Projects — Sasha Grampone Admin</title>
+  <meta name="robots" content="noindex, nofollow" />
+  <link rel="icon" type="image/svg+xml" href="/images/favicon.svg" />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400;1,500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/admin/admin.css" />
+</head>
+<body>
+  <div class="admin-shell">
+    <aside class="admin-sidebar">
+      <span class="admin-brand">Sasha Grampone</span>
+      <span class="admin-brand-sub">Studio Admin</span>
+      <ul class="admin-nav">
+        <li><a href="/admin/">Dashboard</a></li>
+        <li><a href="/admin/leads.html">Leads</a></li>
+        <li><a href="/admin/clients.html">Clients</a></li>
+        <li><a href="/admin/projects.html" class="active">Projects</a></li>
+      </ul>
+      <div class="admin-back">
+        <a href="/" target="_blank">View public site →</a>
+        <br><br>
+        <a href="#" id="logout-link">Sign out</a>
+      </div>
+    </aside>
+
+    <main class="admin-main">
+      <div class="admin-header">
+        <div>
+          <h1>Projects</h1>
+          <p>Active commissions, what stage they're in, and what's owed.</p>
+        </div>
+        <button class="btn btn-primary" id="new-btn">+ Add Project</button>
+      </div>
+
+      <div class="toolbar">
+        <input type="text" class="search" id="search" placeholder="Search by title, client, or notes…" />
+        <select id="filter-status">
+          <option value="">All stages</option>
+          <option value="sketch">Sketch</option>
+          <option value="underpainting">Underpainting</option>
+          <option value="detail">Detail</option>
+          <option value="shipped">Shipped</option>
+          <option value="done">Done</option>
+        </select>
+        <select id="filter-client"><option value="">All clients</option></select>
+      </div>
+
+      <div class="table-wrap">
+        <table class="tbl" id="tbl">
+          <thead>
+            <tr>
+              <th>Title</th>
+              <th>Client</th>
+              <th>Stage</th>
+              <th>Size · Medium</th>
+              <th>Deadline</th>
+              <th>Balance</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody><tr><td colspan="7" class="empty-state"><p>Loading…</p></td></tr></tbody>
+        </table>
+      </div>
+    </main>
+  </div>
+
+  <!-- Drawer -->
+  <div class="drawer-overlay"></div>
+  <aside class="drawer" id="drawer">
+    <div class="drawer-head">
+      <h2 id="drawer-title">New Project</h2>
+      <button class="drawer-close" aria-label="Close">×</button>
+    </div>
+    <div class="drawer-body">
+      <form id="proj-form">
+        <input type="hidden" id="f-id" />
+        <div class="field"><label>Title</label><input type="text" id="f-title" required placeholder="e.g. Marlowe — Golden Retriever" /></div>
+        <div class="field-row">
+          <div class="field"><label>Client</label>
+            <select id="f-clientId"><option value="">— Unassigned —</option></select>
+          </div>
+          <div class="field"><label>Stage</label>
+            <select id="f-status">
+              <option value="sketch">Sketch</option>
+              <option value="underpainting">Underpainting</option>
+              <option value="detail">Detail</option>
+              <option value="shipped">Shipped</option>
+              <option value="done">Done</option>
+            </select>
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field"><label>Size</label><input type="text" id="f-size" placeholder="e.g. 16 × 20 in" /></div>
+          <div class="field"><label>Medium</label>
+            <select id="f-medium">
+              <option value="">—</option>
+              <option>Oil on linen</option>
+              <option>Oil on panel</option>
+              <option>Graphite on cotton paper</option>
+              <option>Mixed media</option>
+            </select>
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field"><label>Started</label><input type="date" id="f-startDate" /></div>
+          <div class="field"><label>Deadline</label><input type="date" id="f-deadline" /></div>
+        </div>
+        <div class="field-row">
+          <div class="field"><label>Total price (USD)</label><input type="number" id="f-price" step="0.01" min="0" placeholder="0.00" /></div>
+          <div class="field"><label>Deposit paid (USD)</label><input type="number" id="f-deposit" step="0.01" min="0" placeholder="0.00" /></div>
+        </div>
+        <div class="field"><label>Notes</label><textarea id="f-notes" placeholder="Reference photos chosen, palette decisions, things to remember…"></textarea></div>
+      </form>
+    </div>
+    <div class="drawer-foot">
+      <button class="btn btn-danger" id="del-btn" style="display:none;">Delete</button>
+      <div style="display:flex; gap:0.6rem; margin-left:auto;">
+        <button class="btn btn-secondary drawer-close">Cancel</button>
+        <button class="btn btn-primary" id="save-btn">Save</button>
+      </div>
+    </div>
+  </aside>
+
+  <script src="/admin/admin.js"></script>
+  <script>
+    document.getElementById("logout-link").addEventListener("click", (e) => { e.preventDefault(); ADMIN.logout(); });
+
+    let data = { items: [] };
+    let clients = { items: [] };
+
+    function clientName(id) {
+      return clients.items.find((c) => c.id === id)?.name || "—";
+    }
+
+    function balance(p) {
+      const total = parseFloat(p.price) || 0;
+      const dep = parseFloat(p.deposit) || 0;
+      return total - dep;
+    }
+
+    function fmtUSD(n) {
+      if (!isFinite(n) || n === 0) return "—";
+      return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(n);
+    }
+
+    function populateClientFilters() {
+      const opts = clients.items
+        .slice()
+        .sort((a, b) => (a.name || "").localeCompare(b.name || ""))
+        .map((c) => `<option value="${c.id}">${ADMIN.esc(c.name)}</option>`)
+        .join("");
+      document.getElementById("filter-client").innerHTML = `<option value="">All clients</option>` + opts;
+      document.getElementById("f-clientId").innerHTML = `<option value="">— Unassigned —</option>` + opts;
+    }
+
+    function render() {
+      const q = document.getElementById("search").value.trim().toLowerCase();
+      const filtStatus = document.getElementById("filter-status").value;
+      const filtClient = document.getElementById("filter-client").value;
+      const items = data.items
+        .filter((p) => !filtStatus || p.status === filtStatus)
+        .filter((p) => !filtClient || p.clientId === filtClient)
+        .filter((p) => {
+          if (!q) return true;
+          return [p.title, clientName(p.clientId), p.notes, p.size, p.medium]
+            .filter(Boolean).join(" ").toLowerCase().includes(q);
+        })
+        .sort((a, b) => {
+          // Active projects first (not done/shipped), by deadline asc
+          const aDone = a.status === "done" || a.status === "shipped";
+          const bDone = b.status === "done" || b.status === "shipped";
+          if (aDone !== bDone) return aDone ? 1 : -1;
+          return new Date(a.deadline || "9999-12-31") - new Date(b.deadline || "9999-12-31");
+        });
+
+      const tbody = document.querySelector("#tbl tbody");
+      if (!items.length) {
+        tbody.innerHTML = `<tr><td colspan="7" class="empty-state">
+          <h3>No projects ${q || filtStatus || filtClient ? "matching" : "yet"}.</h3>
+          <p>${q || filtStatus || filtClient ? "Try clearing the filters." : "Click &ldquo;+ Add Project&rdquo; to start tracking your first commission."}</p>
+        </td></tr>`;
+        return;
+      }
+      tbody.innerHTML = items.map((p) => {
+        const bal = balance(p);
+        const balDisplay = bal > 0 ? `<strong>${fmtUSD(bal)}</strong> due` : `<span style="color:var(--sage-deep);">paid</span>`;
+        const meta = [p.size, p.medium].filter(Boolean).join(" · ");
+        return `
+        <tr data-id="${p.id}">
+          <td><strong>${ADMIN.esc(p.title || "Untitled")}</strong></td>
+          <td>${p.clientId ? `<a href="/admin/clients.html">${ADMIN.esc(clientName(p.clientId))}</a>` : "—"}</td>
+          <td><span class="pill ${p.status || ''}">${p.status || "—"}</span></td>
+          <td>${ADMIN.esc(meta) || "—"}</td>
+          <td>${p.deadline ? ADMIN.fmtDate(p.deadline) : "—"}</td>
+          <td>${(parseFloat(p.price) || 0) === 0 ? "—" : balDisplay}</td>
+          <td class="actions"><button class="btn btn-secondary btn-sm edit">Open</button></td>
+        </tr>`;
+      }).join("");
+      tbody.querySelectorAll("tr").forEach((row) => {
+        row.querySelector(".edit").addEventListener("click", () => {
+          const id = row.dataset.id;
+          openDrawer(data.items.find((x) => x.id === id));
+        });
+      });
+    }
+
+    function openDrawer(proj) {
+      const f = (id) => document.getElementById(id);
+      const isNew = !proj;
+      f("drawer-title").textContent = isNew ? "New Project" : "Edit Project";
+      f("f-id").value = proj?.id || "";
+      f("f-title").value = proj?.title || "";
+      f("f-clientId").value = proj?.clientId || "";
+      f("f-status").value = proj?.status || "sketch";
+      f("f-size").value = proj?.size || "";
+      f("f-medium").value = proj?.medium || "";
+      f("f-startDate").value = proj?.startDate || "";
+      f("f-deadline").value = proj?.deadline || "";
+      f("f-price").value = proj?.price || "";
+      f("f-deposit").value = proj?.deposit || "";
+      f("f-notes").value = proj?.notes || "";
+      f("del-btn").style.display = isNew ? "none" : "inline-flex";
+      ADMIN.openDrawer();
+    }
+
+    async function persist() {
+      try {
+        await ADMIN.save("projects.json", data);
+        ADMIN.toast("Saved. Live in ~30 seconds.", "success");
+      } catch (err) {
+        ADMIN.toast(err.message, "error");
+      }
+    }
+
+    document.getElementById("new-btn").addEventListener("click", () => openDrawer());
+    document.getElementById("search").addEventListener("input", render);
+    document.getElementById("filter-status").addEventListener("change", render);
+    document.getElementById("filter-client").addEventListener("change", render);
+
+    document.getElementById("save-btn").addEventListener("click", async () => {
+      const f = (id) => document.getElementById(id).value.trim();
+      const title = f("f-title");
+      if (!title) { ADMIN.toast("Title is required.", "error"); return; }
+      const id = f("f-id") || ADMIN.id();
+      const existing = data.items.find((x) => x.id === id);
+      const now = new Date().toISOString();
+      const proj = {
+        id,
+        title,
+        clientId: f("f-clientId"),
+        status: f("f-status") || "sketch",
+        size: f("f-size"),
+        medium: f("f-medium"),
+        startDate: f("f-startDate"),
+        deadline: f("f-deadline"),
+        price: f("f-price"),
+        deposit: f("f-deposit"),
+        notes: f("f-notes"),
+        createdAt: existing?.createdAt || now,
+        updatedAt: now,
+      };
+      if (existing) Object.assign(existing, proj); else data.items.unshift(proj);
+      ADMIN.closeDrawer();
+      render();
+      persist();
+    });
+
+    document.getElementById("del-btn").addEventListener("click", async () => {
+      const id = document.getElementById("f-id").value;
+      const p = data.items.find((x) => x.id === id);
+      if (!p) return;
+      if (!ADMIN.confirmDelete(`project "${p.title}"`)) return;
+      data.items = data.items.filter((x) => x.id !== id);
+      ADMIN.closeDrawer();
+      render();
+      persist();
+    });
+
+    (async function () {
+      [data, clients] = await Promise.all([
+        ADMIN.load("projects.json"),
+        ADMIN.load("clients.json"),
+      ]);
+      populateClientFilters();
+      // If ?client=ID or ?id=ID in the URL, auto-filter or open
+      const params = new URLSearchParams(location.search);
+      const cId = params.get("client");
+      const pId = params.get("id");
+      if (cId) document.getElementById("filter-client").value = cId;
+      render();
+      if (pId) {
+        const p = data.items.find((x) => x.id === pId);
+        if (p) openDrawer(p);
+      }
+    })();
+  </script>
+</body>
+</html>
